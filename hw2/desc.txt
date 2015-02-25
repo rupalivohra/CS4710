@@ -1,0 +1,2 @@
+Homework 2 code for the robot goes in here!
+I needed to make a file in order to make a subfolder for hw2, so this is that file. yup.
