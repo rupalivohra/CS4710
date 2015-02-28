@@ -1,34 +1,40 @@
-package hw2;
-
 import java.awt.Point;
+import java.util.ArrayList;
+import java.util.HashMap;
 
 import world.Robot;
 import world.World;
 
 public class MyRobotClass extends Robot {
 	private String[][] map;
-	
-	public MyRobotClass(int r, int c) {
-		this.map = new String[r][c];
+	private HashMap<Node, ArrayList<Node>> adjList;
+	private int destx;
+	private int desty;
+
+	public MyRobotClass(int r, int c, Point dest) {
+		map = new String[r][c];
+		adjList = new HashMap<Node, ArrayList<Node>>();
+		this.destx = dest.x;
+		this.desty = dest.y;
 	}
-	
+
 	public String getMap(int rowIndex, int colIndex) {
 		return this.map[rowIndex][colIndex];
 	}
-	
+
 	public void setMapIndex(int rowIndex, int colIndex, String s) {
 		map[rowIndex][colIndex] = s;
 		return;
 	}
-	
+
 	public String[][] getMap() {
 		return this.map;
 	}
-	
+
 	public String[] getCol(int colIndex) {
 		return this.map[colIndex];
 	}
-	
+
 	public String[] getRow(int rowIndex) {
 		String[] ret = new String[map[0].length];
 		for (int i = 0; i < ret.length; i++) {
@@ -36,22 +42,36 @@ public class MyRobotClass extends Robot {
 		}
 		return ret;
 	}
-	
+
 	public int getNumCols() {
 		return this.map[0].length;
 	}
-	
+
 	public int getNumRows() {
 		return this.map.length;
+	}
+	
+	public static int calcChebyshev(int x1, int y1, int x2, int y2) {
+		return Math.max(Math.abs(x2-x1), Math.abs(y2-y1));
 	}
 
 	@Override
 	public void travelToDestination() {
-		
+
 		for (int i = 0; i < this.getNumRows(); i++) {
 			for (int j = 0; j < this.getNumCols(); j++) {
-				Point t = new Point(i,j);
+				Point t = new Point(i, j);
 				this.setMapIndex(i, j, this.pingMap(t));
+				if(!map[i][j].equals("X")) {
+					Node n = new Node(calcChebyshev(i, j, destx, desty));
+					if (!adjList.containsKey(n)) {
+						ArrayList<Node> arr = new ArrayList<Node>();
+						adjList.put(n,arr);
+					} else {
+						//add adjacent nodes to hashmap
+						
+					}
+				}
 			}
 		}
 		for (int i = 0; i < this.getNumRows(); i++) {
@@ -60,7 +80,15 @@ public class MyRobotClass extends Robot {
 			}
 			System.out.println();
 		}
+
+		// heuristic 1: calculate distance from current to dest by going
+		// diagonal to reach same x, and then horizontally. STOP moving
+		// horizontally if reach same y, and then just move closer in
+		// y-direction.
 		
+		
+		
+
 		/* You can call pingMap if you want to see a part of the map */
 		super.pingMap(new Point(5, 3));
 
@@ -77,7 +105,8 @@ public class MyRobotClass extends Robot {
 			World myWorld = new World("150x24.txt", false);
 
 			/* Create a robot that will run around in the World */
-			MyRobotClass myRobot = new MyRobotClass(myWorld.numRows(),myWorld.numCols());
+			MyRobotClass myRobot = new MyRobotClass(myWorld.numRows(),
+					myWorld.numCols(),myWorld.getEndPos());
 			myRobot.addToWorld(myWorld);
 
 			/* Tell the robot to travel to the destination */
