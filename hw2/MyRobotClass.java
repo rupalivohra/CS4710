@@ -7,15 +7,19 @@ import world.World;
 
 public class MyRobotClass extends Robot {
 	private String[][] map;
-	private HashMap<Node, ArrayList<Node>> adjList;
-	private int destx;
-	private int desty;
+	private static HashMap<Node, ArrayList<Node>> adjList;
+	private static int destx;
+	private static int desty;
 
 	public MyRobotClass(int r, int c, Point dest) {
+		/* int r = numRows of map
+		 * int c = numCols of map
+		 * Point dest = destination location
+		 */
 		map = new String[r][c];
 		adjList = new HashMap<Node, ArrayList<Node>>();
-		this.destx = dest.x;
-		this.desty = dest.y;
+		destx = dest.x;
+		desty = dest.y;
 	}
 
 	public String getMap(int rowIndex, int colIndex) {
@@ -51,8 +55,17 @@ public class MyRobotClass extends Robot {
 		return this.map.length;
 	}
 	
-	public static int calcChebyshev(int x1, int y1, int x2, int y2) {
-		return Math.max(Math.abs(x2-x1), Math.abs(y2-y1));
+	public static int calcChebyshev(int x1, int y1) {
+		/*calculates Chebyshev distance from specified location to destination*/
+		return Math.max(Math.abs(destx-x1), Math.abs(desty-y1));
+	}
+	
+	public static void addToValues(Node key, Node[] toAdd) {
+		for (int i = 0; i < toAdd.length; i++) {
+			if (!adjList.get(key).contains(toAdd[i])) {
+				adjList.get(key).add(toAdd[i]);
+			}
+		}
 	}
 
 	@Override
@@ -63,14 +76,101 @@ public class MyRobotClass extends Robot {
 				Point t = new Point(i, j);
 				this.setMapIndex(i, j, this.pingMap(t));
 				if(!map[i][j].equals("X")) {
-					Node n = new Node(calcChebyshev(i, j, destx, desty));
-					if (!adjList.containsKey(n)) {
+					Node n = new Node(calcChebyshev(i, j));
+					if (!adjList.containsKey(n)) { //if the node has not been processed
 						ArrayList<Node> arr = new ArrayList<Node>();
 						adjList.put(n,arr);
-					} else {
-						//add adjacent nodes to hashmap
-						
+					} 
+					//add adjacent nodes to hashmap
+					if (i > 0 && i < this.getNumRows() - 1 && j > 0 && j < this.getNumCols() - 1) { //middle
+						Node tl = new Node(calcChebyshev(i-1, j-1));
+						Node top = new Node(calcChebyshev(i-1, j));
+						Node tr = new Node(calcChebyshev(i-1, j+1));
+						Node l = new Node(calcChebyshev(i, j-1));
+						Node r = new Node(calcChebyshev(i, j+1));
+						Node bl = new Node(calcChebyshev(i+1, j-1));
+						Node bot = new Node(calcChebyshev(i+1, j));
+						Node br = new Node(calcChebyshev(i+1, j+1));
+						Node[] tempArr = {tl, top, tr, l, r, bl, bot, br};
+						addToValues(n, tempArr);
+					} else if (i == 0) { //first row
+						if (j > 0 && j < this.getNumCols() - 1) { //not corner
+							Node l = new Node(calcChebyshev(i, j-1));
+							Node r = new Node(calcChebyshev(i, j+1));
+							Node bl = new Node(calcChebyshev(i+1, j-1));
+							Node bot = new Node(calcChebyshev(i+1, j));
+							Node br = new Node(calcChebyshev(i+1, j+1));
+							Node[] tempArr = {l, r, bl, bot, br};
+							addToValues(n, tempArr);
+						} else if (j == 0) { //top left corner
+							Node r = new Node(calcChebyshev(i, j+1));
+							Node bot = new Node(calcChebyshev(i+1, j));
+							Node br = new Node(calcChebyshev(i+1, j+1));
+							Node[] tempArr = {r, bot, br};
+							addToValues(n, tempArr);
+						} else { //top right corner
+							Node l = new Node(calcChebyshev(i, j-1));
+							Node bl = new Node(calcChebyshev(i+1, j-1));
+							Node bot = new Node(calcChebyshev(i+1, j));
+							Node[] tempArr = {l, bl, bot};
+							addToValues(n, tempArr);
+						}
+					} else if (i == this.getNumRows()-1) { //last row
+						if (j > 0 && j < this.getNumCols() - 1) { //not corner
+							Node tl = new Node(calcChebyshev(i-1, j-1));
+							Node top = new Node(calcChebyshev(i-1, j));
+							Node tr = new Node(calcChebyshev(i-1, j+1));
+							Node l = new Node(calcChebyshev(i, j-1));
+							Node r = new Node(calcChebyshev(i, j+1));
+							Node[] tempArr = {tl, top, tr, l, r};
+							addToValues(n, tempArr);
+						} else if (j == 0) { //bottom left corner
+							Node top = new Node(calcChebyshev(i-1, j));
+							Node tr = new Node(calcChebyshev(i-1, j+1));
+							Node r = new Node(calcChebyshev(i, j+1));
+							Node[] tempArr = {top, tr, r};
+							addToValues(n, tempArr);
+						} else { //bottom right corner
+							Node tl = new Node(calcChebyshev(i-1, j-1));
+							Node top = new Node(calcChebyshev(i-1, j));
+							Node l = new Node(calcChebyshev(i, j-1));
+							Node[] tempArr = {tl, top, l};
+							addToValues(n, tempArr);
+						}
+					} else if (j == 0) { //first column
+						if (i != this.getNumRows()-1) { //not bottom left corner
+							Node top = new Node(calcChebyshev(i-1, j));
+							Node tr = new Node(calcChebyshev(i-1, j+1));
+							Node r = new Node(calcChebyshev(i, j+1));
+							Node bot = new Node(calcChebyshev(i+1, j));
+							Node br = new Node(calcChebyshev(i+1, j+1));
+							Node[] tempArr = {top, tr, r, bot, br};
+							addToValues(n, tempArr);
+						} else { //bottom left corner
+							Node top = new Node(calcChebyshev(i-1, j));
+							Node tr = new Node(calcChebyshev(i-1, j+1));
+							Node r = new Node(calcChebyshev(i, j+1));
+							Node[] tempArr = {top, tr, r};
+							addToValues(n, tempArr);
+						}
+					} else { //right column
+						if (i != this.getNumRows()-1) { //not bottom right corner
+							Node tl = new Node(calcChebyshev(i-1, j-1));
+							Node top = new Node(calcChebyshev(i-1, j));
+							Node l = new Node(calcChebyshev(i, j-1));
+							Node bl = new Node(calcChebyshev(i+1, j-1));
+							Node bot = new Node(calcChebyshev(i+1, j));
+							Node[] tempArr = {tl, top, l, bl, bot};
+							addToValues(n, tempArr);
+						} else { //bottom right corner
+							Node tl = new Node(calcChebyshev(i-1, j-1));
+							Node top = new Node(calcChebyshev(i-1, j));
+							Node l = new Node(calcChebyshev(i, j-1));
+							Node[] tempArr = {tl, top, l};
+							addToValues(n, tempArr);
+						}
 					}
+						
 				}
 			}
 		}
