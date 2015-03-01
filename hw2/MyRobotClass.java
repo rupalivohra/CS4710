@@ -1,6 +1,8 @@
 import java.awt.Point;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.PriorityQueue;
 
 import world.Robot;
 import world.World;
@@ -10,16 +12,24 @@ public class MyRobotClass extends Robot {
 	private static HashMap<Node, ArrayList<Node>> adjList;
 	private static int destx;
 	private static int desty;
+	private PriorityQueue<Node> q;
+	private static int startx;
+	private static int starty;
 
-	public MyRobotClass(int r, int c, Point dest) {
+	public MyRobotClass(int r, int c, Point start, Point dest) {
 		/* int r = numRows of map
 		 * int c = numCols of map
+		 * Point start = start location
 		 * Point dest = destination location
 		 */
 		map = new String[r][c];
 		adjList = new HashMap<Node, ArrayList<Node>>();
+		startx = start.x;
+		starty = start.y;
 		destx = dest.x;
 		desty = dest.y;
+		Comparator<Node> comparator = new NodeCostComparator();
+		q = new PriorityQueue<Node>(r*c,comparator);
 	}
 
 	public String getMap(int rowIndex, int colIndex) {
@@ -76,7 +86,7 @@ public class MyRobotClass extends Robot {
 				Point t = new Point(i, j);
 				this.setMapIndex(i, j, this.pingMap(t));
 				if(!map[i][j].equals("X")) {
-					Node n = new Node(calcChebyshev(i, j));
+					Node n = new Node(i,j,calcChebyshev(i, j));
 					if (!adjList.containsKey(n)) { //if the node has not been processed
 						ArrayList<Node> arr = new ArrayList<Node>();
 						adjList.put(n,arr);
@@ -206,7 +216,7 @@ public class MyRobotClass extends Robot {
 
 			/* Create a robot that will run around in the World */
 			MyRobotClass myRobot = new MyRobotClass(myWorld.numRows(),
-					myWorld.numCols(),myWorld.getEndPos());
+					myWorld.numCols(),myWorld.getStartPos(),myWorld.getEndPos());
 			myRobot.addToWorld(myWorld);
 
 			/* Tell the robot to travel to the destination */
