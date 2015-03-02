@@ -2,6 +2,7 @@ import java.awt.Point;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.PriorityQueue;
 
 import world.Robot;
@@ -15,6 +16,7 @@ public class MyRobotClass extends Robot {
 	private PriorityQueue<Node> q;
 	private static int startx;
 	private static int starty;
+	private HashSet<Node> closed;
 
 	public MyRobotClass(int r, int c, Point start, Point dest) {
 		/*
@@ -23,6 +25,7 @@ public class MyRobotClass extends Robot {
 		 */
 		map = new String[r][c];
 		adjList = new HashMap<Node, ArrayList<Node>>();
+		closed = new HashSet<Node>();
 		startx = start.x;
 		starty = start.y;
 		destx = dest.x;
@@ -129,17 +132,24 @@ public class MyRobotClass extends Robot {
 		// horizontally if reach same y, and then just move closer in
 		// y-direction.
 
+		// A*
+
 		Node start = new Node(startx, starty, 0);
 		System.out.println(start); // prints out [y,x]. I feel like it's a
 									// simple fix to just reverse what we store
 									// things in, but I could be wrong. Can you
 									// check this? -R
 
-		// ArrayList<Node> adj = adjList.get(start);
-		// for (int i = 0; i < adj.size(); i++) {
-		// q.add(adj.get(i));
-		// System.out.println(q);
-		// }
+		while (!q.isEmpty()) { //not right, but I wanted to push what I had started
+			ArrayList<Node> adj = adjList.get(start);
+			closed.add(start);
+			for (int i = 0; i < adj.size(); i++) {
+				adj.get(i).setPastCost(adj.get(i).getPastCost() + 1);
+				adj.get(i).setPrevNode(start);
+				q.add(adj.get(i));
+				System.out.println(q);
+			}
+		}
 
 		/* You can call pingMap if you want to see a part of the map */
 		super.pingMap(new Point(5, 3));
