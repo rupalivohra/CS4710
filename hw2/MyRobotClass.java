@@ -17,10 +17,9 @@ public class MyRobotClass extends Robot {
 	private static int starty;
 
 	public MyRobotClass(int r, int c, Point start, Point dest) {
-		/* int r = numRows of map
-		 * int c = numCols of map
-		 * Point start = start location
-		 * Point dest = destination location
+		/*
+		 * int r = numRows of map int c = numCols of map Point start = start
+		 * location Point dest = destination location
 		 */
 		map = new String[r][c];
 		adjList = new HashMap<Node, ArrayList<Node>>();
@@ -29,7 +28,7 @@ public class MyRobotClass extends Robot {
 		destx = dest.x;
 		desty = dest.y;
 		Comparator<Node> comparator = new NodeCostComparator();
-		q = new PriorityQueue<Node>(r*c,comparator);
+		q = new PriorityQueue<Node>(r * c, comparator);
 	}
 
 	public String getMap(int rowIndex, int colIndex) {
@@ -64,12 +63,12 @@ public class MyRobotClass extends Robot {
 	public int getNumRows() {
 		return this.map.length;
 	}
-	
+
 	public static int calcChebyshev(int x1, int y1) {
-		/*calculates Chebyshev distance from specified location to destination*/
-		return Math.max(Math.abs(destx-x1), Math.abs(desty-y1));
+		/* calculates Chebyshev distance from specified location to destination */
+		return Math.max(Math.abs(destx - x1), Math.abs(desty - y1));
 	}
-	
+
 	public static void addToValues(Node key, Node[] toAdd) {
 		for (int i = 0; i < toAdd.length; i++) {
 			if (!adjList.get(key).contains(toAdd[i])) {
@@ -78,115 +77,49 @@ public class MyRobotClass extends Robot {
 		}
 	}
 
+	public boolean inBounds(int i, int j) {
+		if (i < 0 || i >= this.map.length) {
+			return false;
+		}
+		if (j < 0 || j >= this.map[i].length) {
+			return false;
+		}
+		return true;
+	}
+
 	@Override
 	public void travelToDestination() {
-
+		// populate graph
 		for (int i = 0; i < this.getNumRows(); i++) {
 			for (int j = 0; j < this.getNumCols(); j++) {
 				Point t = new Point(i, j);
 				this.setMapIndex(i, j, this.pingMap(t));
-				if(!map[i][j].equals("X")) {
-					Node n = new Node(i,j,calcChebyshev(i, j));
-					if (!adjList.containsKey(n)) { //if the node has not been processed
-						ArrayList<Node> arr = new ArrayList<Node>();
-						adjList.put(n,arr);
-					} 
-					//add adjacent nodes to hashmap
-					if (i > 0 && i < this.getNumRows() - 1 && j > 0 && j < this.getNumCols() - 1) { //middle
-						Node tl = new Node(calcChebyshev(i-1, j-1));
-						Node top = new Node(calcChebyshev(i-1, j));
-						Node tr = new Node(calcChebyshev(i-1, j+1));
-						Node l = new Node(calcChebyshev(i, j-1));
-						Node r = new Node(calcChebyshev(i, j+1));
-						Node bl = new Node(calcChebyshev(i+1, j-1));
-						Node bot = new Node(calcChebyshev(i+1, j));
-						Node br = new Node(calcChebyshev(i+1, j+1));
-						Node[] tempArr = {tl, top, tr, l, r, bl, bot, br};
-						addToValues(n, tempArr);
-					} else if (i == 0) { //first row
-						if (j > 0 && j < this.getNumCols() - 1) { //not corner
-							Node l = new Node(calcChebyshev(i, j-1));
-							Node r = new Node(calcChebyshev(i, j+1));
-							Node bl = new Node(calcChebyshev(i+1, j-1));
-							Node bot = new Node(calcChebyshev(i+1, j));
-							Node br = new Node(calcChebyshev(i+1, j+1));
-							Node[] tempArr = {l, r, bl, bot, br};
-							addToValues(n, tempArr);
-						} else if (j == 0) { //top left corner
-							Node r = new Node(calcChebyshev(i, j+1));
-							Node bot = new Node(calcChebyshev(i+1, j));
-							Node br = new Node(calcChebyshev(i+1, j+1));
-							Node[] tempArr = {r, bot, br};
-							addToValues(n, tempArr);
-						} else { //top right corner
-							Node l = new Node(calcChebyshev(i, j-1));
-							Node bl = new Node(calcChebyshev(i+1, j-1));
-							Node bot = new Node(calcChebyshev(i+1, j));
-							Node[] tempArr = {l, bl, bot};
-							addToValues(n, tempArr);
-						}
-					} else if (i == this.getNumRows()-1) { //last row
-						if (j > 0 && j < this.getNumCols() - 1) { //not corner
-							Node tl = new Node(calcChebyshev(i-1, j-1));
-							Node top = new Node(calcChebyshev(i-1, j));
-							Node tr = new Node(calcChebyshev(i-1, j+1));
-							Node l = new Node(calcChebyshev(i, j-1));
-							Node r = new Node(calcChebyshev(i, j+1));
-							Node[] tempArr = {tl, top, tr, l, r};
-							addToValues(n, tempArr);
-						} else if (j == 0) { //bottom left corner
-							Node top = new Node(calcChebyshev(i-1, j));
-							Node tr = new Node(calcChebyshev(i-1, j+1));
-							Node r = new Node(calcChebyshev(i, j+1));
-							Node[] tempArr = {top, tr, r};
-							addToValues(n, tempArr);
-						} else { //bottom right corner
-							Node tl = new Node(calcChebyshev(i-1, j-1));
-							Node top = new Node(calcChebyshev(i-1, j));
-							Node l = new Node(calcChebyshev(i, j-1));
-							Node[] tempArr = {tl, top, l};
-							addToValues(n, tempArr);
-						}
-					} else if (j == 0) { //first column
-						if (i != this.getNumRows()-1) { //not bottom left corner
-							Node top = new Node(calcChebyshev(i-1, j));
-							Node tr = new Node(calcChebyshev(i-1, j+1));
-							Node r = new Node(calcChebyshev(i, j+1));
-							Node bot = new Node(calcChebyshev(i+1, j));
-							Node br = new Node(calcChebyshev(i+1, j+1));
-							Node[] tempArr = {top, tr, r, bot, br};
-							addToValues(n, tempArr);
-						} else { //bottom left corner
-							Node top = new Node(calcChebyshev(i-1, j));
-							Node tr = new Node(calcChebyshev(i-1, j+1));
-							Node r = new Node(calcChebyshev(i, j+1));
-							Node[] tempArr = {top, tr, r};
-							addToValues(n, tempArr);
-						}
-					} else { //right column
-						if (i != this.getNumRows()-1) { //not bottom right corner
-							Node tl = new Node(calcChebyshev(i-1, j-1));
-							Node top = new Node(calcChebyshev(i-1, j));
-							Node l = new Node(calcChebyshev(i, j-1));
-							Node bl = new Node(calcChebyshev(i+1, j-1));
-							Node bot = new Node(calcChebyshev(i+1, j));
-							Node[] tempArr = {tl, top, l, bl, bot};
-							addToValues(n, tempArr);
-						} else { //bottom right corner
-							Node tl = new Node(calcChebyshev(i-1, j-1));
-							Node top = new Node(calcChebyshev(i-1, j));
-							Node l = new Node(calcChebyshev(i, j-1));
-							Node[] tempArr = {tl, top, l};
-							addToValues(n, tempArr);
+				if (!map[i][j].equals("X")) {
+					ArrayList<Node> arr = null;
+					Node n = new Node(i, j, calcChebyshev(i, j));
+					if (!adjList.containsKey(n)) { // if the node has not been
+													// processed
+						arr = new ArrayList<Node>();
+						adjList.put(n, arr);
+					}
+
+					for (int horz = i - 1; horz < i + 2; horz++) {
+						for (int vert = j - 1; vert < j + 2; vert++) {
+							if (inBounds(horz, vert)
+									&& (i != horz || j != vert)) {
+								if (!map[i][j].equals("X")) {
+									arr.add(new Node(horz, vert, calcChebyshev(
+											horz, vert)));
+								}
+							}
 						}
 					}
-						
 				}
 			}
 		}
 		for (int i = 0; i < this.getNumRows(); i++) {
 			for (int j = 0; j < this.getNumCols(); j++) {
-				System.out.print(this.getMap(i, j));
+				System.out.print(this.getMap(i, j) + " ");
 			}
 			System.out.println();
 		}
@@ -195,9 +128,18 @@ public class MyRobotClass extends Robot {
 		// diagonal to reach same x, and then horizontally. STOP moving
 		// horizontally if reach same y, and then just move closer in
 		// y-direction.
-		
-		
-		
+
+		Node start = new Node(startx, starty, 0);
+		System.out.println(start); // prints out [y,x]. I feel like it's a
+									// simple fix to just reverse what we store
+									// things in, but I could be wrong. Can you
+									// check this? -R
+
+		// ArrayList<Node> adj = adjList.get(start);
+		// for (int i = 0; i < adj.size(); i++) {
+		// q.add(adj.get(i));
+		// System.out.println(q);
+		// }
 
 		/* You can call pingMap if you want to see a part of the map */
 		super.pingMap(new Point(5, 3));
@@ -212,11 +154,12 @@ public class MyRobotClass extends Robot {
 			 * Create a world. Pass the input filename first. Second parameter
 			 * is whether or not the world is uncertain.
 			 */
-			World myWorld = new World("150x24.txt", false);
+			World myWorld = new World("8x6.txt", false);
 
 			/* Create a robot that will run around in the World */
 			MyRobotClass myRobot = new MyRobotClass(myWorld.numRows(),
-					myWorld.numCols(),myWorld.getStartPos(),myWorld.getEndPos());
+					myWorld.numCols(), myWorld.getStartPos(),
+					myWorld.getEndPos());
 			myRobot.addToWorld(myWorld);
 
 			/* Tell the robot to travel to the destination */

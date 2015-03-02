@@ -40,6 +40,11 @@ public class Node {
 		return true;
 	}
 
+	@Override
+	public String toString() {
+		return "[" + x + ", " + y + "] pastCost = " + pastCost + ", futureCost = " + futureCost;
+	}
+
 	public void setPastCost(int x) {
 		this.pastCost = x;
 	}
