@@ -6,6 +6,7 @@ public class Node {
 	private Node prevNode;
 	private int x;
 	private int y;
+	private boolean visited;
 	
 	public Node(int xLoc, int yLoc, int h) {
 		this.x = xLoc;
@@ -13,7 +14,20 @@ public class Node {
 		this.pastCost = 0;
 		this.futureCost = h;
 		this.prevNode = null;
+		this.visited = false;
 	}
+	
+	public boolean getVisited(){
+	    return visited;
+	}
+	public void setVisited(){
+	    visited = true;
+	}
+	
+    @Override
+    public String toString() {
+        return "[" + x + ", " + y + "] pastCost = " + pastCost + ", futureCost = " + futureCost;
+    }
 	
 	@Override
 	public int hashCode() {
@@ -38,11 +52,6 @@ public class Node {
 		if (y != other.y)
 			return false;
 		return true;
-	}
-
-	@Override
-	public String toString() {
-		return "[" + x + ", " + y + "] pastCost = " + pastCost + ", futureCost = " + futureCost;
 	}
 
 	public void setPastCost(int x) {
@@ -71,5 +80,11 @@ public class Node {
 	
 	public Node getPrevNode() {
 		return this.prevNode;
+	}
+	public int getX(){
+	    return x;
+	}
+	public int getY(){
+	    return y;
 	}
 }

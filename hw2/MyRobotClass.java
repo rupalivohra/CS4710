@@ -97,29 +97,35 @@ public class MyRobotClass extends Robot {
 			for (int j = 0; j < this.getNumCols(); j++) {
 				Point t = new Point(i, j);
 				this.setMapIndex(i, j, this.pingMap(t));
-				if (!map[i][j].equals("X")) {
-					ArrayList<Node> arr = null;
-					Node n = new Node(i, j, calcChebyshev(i, j));
-					if (!adjList.containsKey(n)) { // if the node has not been
-													// processed
-						arr = new ArrayList<Node>();
-						adjList.put(n, arr);
-					}
-
-					for (int horz = i - 1; horz < i + 2; horz++) {
-						for (int vert = j - 1; vert < j + 2; vert++) {
-							if (inBounds(horz, vert)
-									&& (i != horz || j != vert)) {
-								if (!map[i][j].equals("X")) {
-									arr.add(new Node(horz, vert, calcChebyshev(
-											horz, vert)));
-								}
-							}
-						}
-					}
-				}
 			}
 		}
+		
+	      for (int i = 0; i < this.getNumRows(); i++) {
+	            for (int j = 0; j < this.getNumCols(); j++) {
+	                if (!map[i][j].equals("X")) {
+	                    ArrayList<Node> arr = null;
+	                    Node n = new Node(i, j, calcChebyshev(i, j));
+	                    if (!adjList.containsKey(n)) { // if the node has not been
+	                                                    // processed
+	                        arr = new ArrayList<Node>();
+	                        adjList.put(n, arr);
+	                    }
+
+	                    for (int horz = i - 1; horz < i + 2; horz++) {
+	                        for (int vert = j - 1; vert < j + 2; vert++) {
+	                            if (inBounds(horz, vert)
+	                                    && (i != horz || j != vert)) {
+	                                if (!map[horz][vert].equals("X")) {
+	                                    arr.add(new Node(horz, vert, calcChebyshev(
+	                                            horz, vert)));
+	                                }
+	                            }
+	                        }
+	                    }
+	                }
+	            }
+	      }
+		
 		for (int i = 0; i < this.getNumRows(); i++) {
 			for (int j = 0; j < this.getNumCols(); j++) {
 				System.out.print(this.getMap(i, j) + " ");
@@ -135,21 +141,49 @@ public class MyRobotClass extends Robot {
 		// A*
 
 		Node start = new Node(startx, starty, 0);
-		System.out.println(start); // prints out [y,x]. I feel like it's a
+		System.out.println("Start: " + start); // prints out [y,x]. I feel like it's a
 									// simple fix to just reverse what we store
 									// things in, but I could be wrong. Can you
 									// check this? -R
+		
+		/*
+		 * Someone asked on Piazza, but it's effectively (row, column) which is more like (y,x)
+		 * We could change how we define nodes, or we could change the for loops. That is, call the outer one j and the inner i. Then it maps to x and y correctly. 
+		 */
+		ArrayList<Node> adj = adjList.get(start);
+		q.add(start);
+		Node tmp = null;
+		
+		int dist = 0;
 
 		while (!q.isEmpty()) { //not right, but I wanted to push what I had started
-			ArrayList<Node> adj = adjList.get(start);
-			closed.add(start);
+			//closed.add(start);
+		    tmp = q.poll();
+		    adj = adjList.get(tmp);
+		    tmp.setVisited();
+		    if(tmp.getX() == destx && tmp.getY() == desty){
+		        dist = tmp.getCost();
+		        break;
+		    }
+		    //System.out.println(tmp);
+		    //System.out.println(adj);
 			for (int i = 0; i < adj.size(); i++) {
-				adj.get(i).setPastCost(adj.get(i).getPastCost() + 1);
-				adj.get(i).setPrevNode(start);
-				q.add(adj.get(i));
-				System.out.println(q);
+			    if(!adj.get(i).getVisited()){
+    				adj.get(i).setPastCost(tmp.getPastCost() + 1);
+    				adj.get(i).setFutureCost(calcChebyshev(adj.get(i).getX(),adj.get(i).getY()));
+    				adj.get(i).setPrevNode(tmp);
+    				q.add(adj.get(i));
+			    }
+				//System.out.println(q);
 			}
 		}
+		System.out.println("Path Distance: " + dist);
+		System.out.print("Finish: ");
+		while(tmp.getPrevNode() != null){
+		    System.out.println(tmp);
+		    tmp = tmp.getPrevNode();
+		}
+	    System.out.println("Start: " + tmp);
 
 		/* You can call pingMap if you want to see a part of the map */
 		super.pingMap(new Point(5, 3));
@@ -164,7 +198,7 @@ public class MyRobotClass extends Robot {
 			 * Create a world. Pass the input filename first. Second parameter
 			 * is whether or not the world is uncertain.
 			 */
-			World myWorld = new World("8x6.txt", false);
+			World myWorld = new World("bin/8x6.txt", false);
 
 			/* Create a robot that will run around in the World */
 			MyRobotClass myRobot = new MyRobotClass(myWorld.numRows(),
