@@ -177,19 +177,25 @@ public class MyRobotClass extends Robot {
 				//System.out.println(q);
 			}
 		}
+		ArrayList<Point> moveList = new ArrayList<Point>();
 		System.out.println("Path Distance: " + dist);
 		System.out.print("Finish: ");
 		while(tmp.getPrevNode() != null){
 		    System.out.println(tmp);
+		    moveList.add(0,new Point(tmp.getX(),tmp.getY()));
 		    tmp = tmp.getPrevNode();
 		}
 	    System.out.println("Start: " + tmp);
+	    
+	    for(int i = 0; i < moveList.size(); i++){
+	        super.move(moveList.get(i));
+	    }
 
 		/* You can call pingMap if you want to see a part of the map */
-		super.pingMap(new Point(5, 3));
+		//super.pingMap(new Point(5, 3));
 
 		/* You can call move to move your robot to a new location */
-		super.move(new Point(3, 7));
+		//super.move(new Point(3, 7));
 	}
 
 	public static void main(String[] args) {
