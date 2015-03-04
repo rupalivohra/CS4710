@@ -169,27 +169,40 @@ public class MyRobotClass extends Robot {
 		    //System.out.println(adj);
 			for (int i = 0; i < adj.size(); i++) {
 			    if(!adj.get(i).getVisited()){
+			        if(!q.contains(adj.get(i))){
     				adj.get(i).setPastCost(tmp.getPastCost() + 1);
     				adj.get(i).setFutureCost(calcChebyshev(adj.get(i).getX(),adj.get(i).getY()));
     				adj.get(i).setPrevNode(tmp);
     				q.add(adj.get(i));
+			        }else{//if already in our queue
+			          if(((tmp.getPastCost() + 1) + (calcChebyshev(adj.get(i).getX(),adj.get(i).getY()))) < adj.get(i).getCost()){//and we found a better path
+		                   adj.get(i).setPastCost(tmp.getPastCost() + 1);//update
+		                   adj.get(i).setFutureCost(calcChebyshev(adj.get(i).getX(),adj.get(i).getY()));
+		                   adj.get(i).setPrevNode(tmp);
+		                    //q.add(adj.get(i));
+			          }
+			        }
 			    }
 				//System.out.println(q);
 			}
 		}
-		ArrayList<Point> moveList = new ArrayList<Point>();
-		System.out.println("Path Distance: " + dist);
-		System.out.print("Finish: ");
-		while(tmp.getPrevNode() != null){
-		    System.out.println(tmp);
-		    moveList.add(0,new Point(tmp.getX(),tmp.getY()));
-		    tmp = tmp.getPrevNode();
-		}
-	    System.out.println("Start: " + tmp);
-	    
-	    for(int i = 0; i < moveList.size(); i++){
-	        super.move(moveList.get(i));
+		if(tmp.getX() != destx || tmp.getY() != desty){
+		    System.out.println("No path could be found!");
+		}else{
+    		ArrayList<Point> moveList = new ArrayList<Point>();
+    		System.out.println("Path Distance: " + dist);
+    		System.out.print("Finish: ");
+    		while(tmp.getPrevNode() != null){
+    		    System.out.println(tmp);
+    		    moveList.add(0,new Point(tmp.getX(),tmp.getY()));
+    		    tmp = tmp.getPrevNode();
+    		}
+    	    System.out.println("Start: " + tmp);
+    	    
+    	    for(int i = 0; i < moveList.size(); i++){
+    	        super.move(moveList.get(i));
 	    }
+		}
 
 		/* You can call pingMap if you want to see a part of the map */
 		//super.pingMap(new Point(5, 3));
