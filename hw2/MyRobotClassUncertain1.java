@@ -38,7 +38,7 @@ public class MyRobotClassUncertain1 extends Robot {
 		desty = dest.y;
 		Comparator<Node> comparator = new NodeCostComparator();
 		q = new PriorityQueue<Node>(r * c, comparator);
-		maxCheby = 7;
+		maxCheby = 3;
 	}
 
 	public String getMap(int rowIndex, int colIndex) {
@@ -104,11 +104,12 @@ public class MyRobotClassUncertain1 extends Robot {
 	
 	//TODO: Implement this
 	public String poll(Point p){
-	   return "";
+	   return "O";
 	}
 
 	@Override
 	public void travelToDestination() {
+	    //System.out.println("DEST: " + destx + "," + desty);
 	    known.put(new Point(startx,starty), "S");
 	    nodeMap.put(new Point(startx,starty), new Node(startx,starty, calcChebyshev(startx,starty)));
 	    //Push start onto queue
@@ -118,13 +119,21 @@ public class MyRobotClassUncertain1 extends Robot {
 	    Node start_node = nodeMap.get(new Point(startx,starty));
 	    moveList = new ArrayList<Node>();
 	    Point temp_p = null;
-	    while(!q.isEmpty() && (cur_node.getX() != destx || cur_node.getY() != desty)){
+	    
+	    while(!q.isEmpty()){
 	        //Pop off a node
 	        cur_node = q.poll();
+	        cur_node.setVisited();
 	        
-	        if(calcChebyshev(new Point(start_node.getX(),start_node.getY()),new Point(cur_node.getX(),cur_node.getY())) > maxCheby){
+	        
+	        if((calcChebyshev(new Point(start_node.getX(),start_node.getY()),new Point(cur_node.getX(),cur_node.getY())) > maxCheby) || (cur_node.getX() == destx && cur_node.getY() == desty)){
                 //If node = maxCheby + 1 away, move to its prevNode.
-	            while(cur_node != start_node){
+
+	            //System.out.println("COMPARE" + start_node);
+	            //System.out.println(start_node);
+	            //System.out.println(cur_node);
+	            while(!cur_node.equals(start_node)){
+	                //System.out.println(cur_node);
 	                moveList.add(0,cur_node);
 	                cur_node = cur_node.getPrevNode();
 	            }
@@ -133,19 +142,19 @@ public class MyRobotClassUncertain1 extends Robot {
 	            for(int i = 0; i < moveList.size(); i++){
 	                temp_p = new Point(moveList.get(i).getX(),moveList.get(i).getY());
 	                super.move(temp_p);
-	                nodeMap.get(super.getPosition()).setVisited();
+	                //nodeMap.get(super.getPosition()).setVisited();
 	                if(super.getPosition().equals(temp_p)){
 	                    known.put(temp_p, "O");
 	                }else{//If we get to the node or we hit an unexpected barrier, empty queue, add current position and start over
 	                    known.put(temp_p, "X");
-	                    start_node = nodeMap.get(temp_p);
-	                    cur_node = nodeMap.get(temp_p);
+	                    start_node = nodeMap.get(super.getPosition());
+	                    cur_node = nodeMap.get(super.getPosition());
 	                    q.clear();
 	                    q.add(start_node);
 	                    break;
 	                }
 	                if(super.getPosition().equals(new Point(moveList.get(moveList.size() - 1).getX(),moveList.get(moveList.size() - 1).getY()))){
-	                    System.out.println("GOT TO TARGET");
+	                    //System.out.println("GOT TO TARGET");
 	                    start_node = nodeMap.get(super.getPosition());
 	                    cur_node = nodeMap.get(super.getPosition());
 	                    q.clear();
@@ -176,19 +185,24 @@ public class MyRobotClassUncertain1 extends Robot {
                                 if(!nodeMap.containsKey(temp_point)){
                                 nodeMap.put(temp_point, new Node(horz,vert,calcChebyshev(horz,vert)));
                                 }
+                                //System.out.println(temp_point);
                                 //Add to queue if is O and not in queue and not visited
                                 //update cost and prev
                                 if(!q.contains(nodeMap.get(temp_point))){
                                     if(!nodeMap.get(temp_point).getVisited()){
                                     nodeMap.get(temp_point).setPastCost(cur_node.getPastCost() + 1);
                                     nodeMap.get(temp_point).setPrevNode(cur_node);
+                                    //System.out.println("Setting prev node for " + temp_point + " to " + cur_node);
                                     q.add(nodeMap.get(temp_point));
+                                    }else{
+                                        //System.out.println("Already Visited " + temp_point);
                                     }
                                 }else{//If in queue, update if less
                                     if((cur_node.getPastCost() + 1 + calcChebyshev(temp_point.x,temp_point.y)) < nodeMap.get(temp_point).getCost()){
                                         q.remove(nodeMap.get(temp_point));
                                         nodeMap.get(temp_point).setPastCost(cur_node.getPastCost() + 1);
                                         nodeMap.get(temp_point).setPrevNode(cur_node);
+                                        //System.out.println("Setting prev node for " + temp_point + " to " + cur_node);
                                         q.add(nodeMap.get(temp_point));
                                     }
                                 }
@@ -201,33 +215,8 @@ public class MyRobotClassUncertain1 extends Robot {
 	            
 	        }
 
-	    }
-	    //Check if we ended because we go to final
-	    //If so, move to final
-	    //If not, print error.
-	       if(cur_node.getX() != destx || cur_node.getY() != desty){
-	            System.out.println("No path could be found!");
-	        }else{
-	            //System.out.println("Path Distance: " + dist);
-	            //System.out.print("Finish: ");
-	            
-	            //TODO:The PrevNode values are somehow getting into a loop. This isn't the fault of the code here, it's above. Still, needs a fix
-	            while(new Point(cur_node.getPrevNode().getX(),cur_node.getPrevNode().getY()) != super.getPosition()){
-	                System.out.println(cur_node);
-	                System.out.println(super.getPosition());
-	                //System.out.println(tmp);
-	                moveList.add(0,cur_node);
-	               cur_node = cur_node.getPrevNode();
-	            }
-	            //System.out.println("Start: " + tmp);
-	            
-	            for(int i = 0; i < moveList.size(); i++){
-	               temp_p = new Point(moveList.get(i).getX(),moveList.get(i).getY());
-	               super.move(temp_p);
-	        }
-	        }
-	    
-	    System.out.println("DONE");
+	    }    
+	    System.out.println("The algorithm failed to find a path.");
 	}
 
 	public static void main(String[] args) {
