@@ -10,13 +10,17 @@ import world.World;
 
 public class MyRobotClassUncertain1 extends Robot {
 	private String[][] map;
-	private static HashMap<Node, ArrayList<Node>> adjList;
+	private static HashMap<Point, ArrayList<Node>> adjList;
+	private static HashMap<Point, Node> nodeMap;
+	private static HashMap<Point, String> known;
 	private static int destx;
 	private static int desty;
 	private PriorityQueue<Node> q;
 	private static int startx;
 	private static int starty;
 	private HashSet<Node> closed;
+	private static int maxCheby;
+	private static ArrayList<Node> moveList;
 
 	public MyRobotClassUncertain1(int r, int c, Point start, Point dest) {
 		/*
@@ -24,7 +28,9 @@ public class MyRobotClassUncertain1 extends Robot {
 		 * location Point dest = destination location
 		 */
 		map = new String[r][c];
-		adjList = new HashMap<Node, ArrayList<Node>>();
+		adjList = new HashMap<Point, ArrayList<Node>>();
+		nodeMap = new HashMap<Point, Node>();
+		known = new HashMap<Point, String>();
 		closed = new HashSet<Node>();
 		startx = start.x;
 		starty = start.y;
@@ -32,6 +38,7 @@ public class MyRobotClassUncertain1 extends Robot {
 		desty = dest.y;
 		Comparator<Node> comparator = new NodeCostComparator();
 		q = new PriorityQueue<Node>(r * c, comparator);
+		maxCheby = 7;
 	}
 
 	public String getMap(int rowIndex, int colIndex) {
@@ -71,6 +78,11 @@ public class MyRobotClassUncertain1 extends Robot {
 		/* calculates Chebyshev distance from specified location to destination */
 		return Math.max(Math.abs(destx - x1), Math.abs(desty - y1));
 	}
+	
+	public static int calcChebyshev(Point start, Point cur) {
+	        /* calculates Chebyshev distance from specified location to destination */
+	        return Math.max(Math.abs(start.x - cur.x), Math.abs(start.y - cur.y));
+	}
 
 	public static void addToValues(Node key, Node[] toAdd) {
 		for (int i = 0; i < toAdd.length; i++) {
@@ -89,126 +101,76 @@ public class MyRobotClassUncertain1 extends Robot {
 		}
 		return true;
 	}
+	
+	//TODO: Implement this
+	public String poll(Point p){
+	   return "";
+	}
 
 	@Override
 	public void travelToDestination() {
-		// populate graph
-		for (int i = 0; i < this.getNumRows(); i++) {
-			for (int j = 0; j < this.getNumCols(); j++) {
-				Point t = new Point(i, j);
-				this.setMapIndex(i, j, this.pingMap(t));
-			}
-		}
-		
-	      for (int i = 0; i < this.getNumRows(); i++) {
-	            for (int j = 0; j < this.getNumCols(); j++) {
-	                if (!map[i][j].equals("X")) {
-	                    ArrayList<Node> arr = null;
-	                    Node n = new Node(i, j, calcChebyshev(i, j));
-	                    if (!adjList.containsKey(n)) { // if the node has not been
-	                                                    // processed
-	                        arr = new ArrayList<Node>();
-	                        adjList.put(n, arr);
-	                    }
-
-	                    for (int horz = i - 1; horz < i + 2; horz++) {
-	                        for (int vert = j - 1; vert < j + 2; vert++) {
-	                            if (inBounds(horz, vert)
-	                                    && (i != horz || j != vert)) {
-	                                if (!map[horz][vert].equals("X")) {
-	                                    arr.add(new Node(horz, vert, calcChebyshev(
-	                                            horz, vert)));
-	                                }
-	                            }
-	                        }
-	                    }
+	    known.put(new Point(startx,starty), "S");
+	    nodeMap.put(new Point(startx,starty), new Node(startx,starty, calcChebyshev(startx,starty)));
+	    //Push start onto queue
+	    q.add(nodeMap.get(new Point(startx,starty)));
+	    //while queue not empty and not at finish
+	    Node cur_node = nodeMap.get(new Point(startx,starty));
+	    Node start_node = nodeMap.get(new Point(startx,starty));
+	    moveList = new ArrayList<Node>();
+	    Point temp_p = null;
+	    while(!q.isEmpty() && (cur_node.getX() != destx || cur_node.getY() != desty)){
+	        //Pop off a node
+	        cur_node = q.poll();
+	        
+	        if(calcChebyshev(new Point(start_node.getX(),start_node.getY()),new Point(cur_node.getX(),cur_node.getY())) > maxCheby){
+                //If node = maxCheby + 1 away, move to its prevNode.
+	            while(cur_node != start_node){
+	                moveList.add(0,cur_node);
+	                cur_node = cur_node.getPrevNode();
+	            }
+	            
+                //As moving, add nodes hit to known set, to save pings
+	            for(int i = 0; i < moveList.size(); i++){
+	                temp_p = new Point(moveList.get(i).getX(),moveList.get(i).getY());
+	                super.move(temp_p);
+	                if(super.getPosition().equals(temp_p)){
+	                    known.put(temp_p, "O");
+	                }else{//If we get to the node or we hit an unexpected barrier, empty queue, add current position and start over
+	                    start_node = nodeMap.get(temp_p);
+	                    cur_node = nodeMap.get(temp_p);
+	                    q.clear();
+	                    q.add(start_node);
 	                }
 	            }
-	      }
-		
-		for (int i = 0; i < this.getNumRows(); i++) {
-			for (int j = 0; j < this.getNumCols(); j++) {
-				System.out.print(this.getMap(i, j) + " ");
-			}
-			System.out.println();
-		}
+	        }else{
+	            //Look for adjacent nodes. Do this by pinging according to poll()
+	            //Create new node objects and add them to nodeMap
+	            int i = cur_node.getX();
+	            int j = cur_node.getY();
+	            String temp_str = null;
+	            
+                for (int horz = i - 1; horz < i + 2; horz++) {
+                    for (int vert = j - 1; vert < j + 2; vert++) {
+                        if (inBounds(horz, vert)
+                                && (i != horz || j != vert)) {
+                            if(known.containsKey(new Point(horz,vert))){
+                                temp_str = known.get(new Point(horz,vert));
+                            }else{
+                                temp_str = poll(new Point(horz,vert));
+                            }
+                            //TODO: If temp_str is valid, make a node for it and add it to nodeMap
+                            //Add if is O and not in queue and not visited
+                            //update cost and prev
+                            //If in queue, update if less
+                        }
+                    }
+                }
+	            
+	            
+	        }
 
-		// heuristic 1: calculate distance from current to dest by going
-		// diagonal to reach same x, and then horizontally. STOP moving
-		// horizontally if reach same y, and then just move closer in
-		// y-direction.
-
-		// A*
-
-		Node start = new Node(startx, starty, 0);
-		System.out.println("Start: " + start); // prints out [y,x]. I feel like it's a
-									// simple fix to just reverse what we store
-									// things in, but I could be wrong. Can you
-									// check this? -R
-		
-		/*
-		 * Someone asked on Piazza, but it's effectively (row, column) which is more like (y,x)
-		 * We could change how we define nodes, or we could change the for loops. That is, call the outer one j and the inner i. Then it maps to x and y correctly. 
-		 */
-		ArrayList<Node> adj = adjList.get(start);
-		q.add(start);
-		Node tmp = null;
-		
-		int dist = 0;
-
-		while (!q.isEmpty()) { //not right, but I wanted to push what I had started
-			//closed.add(start);
-		    tmp = q.poll();
-		    adj = adjList.get(tmp);
-		    tmp.setVisited();
-		    if(tmp.getX() == destx && tmp.getY() == desty){
-		        dist = tmp.getCost();
-		        break;
-		    }
-		    //System.out.println(tmp);
-		    //System.out.println(adj);
-			for (int i = 0; i < adj.size(); i++) {
-			    if(!adj.get(i).getVisited()){
-			        if(!q.contains(adj.get(i))){
-    				adj.get(i).setPastCost(tmp.getPastCost() + 1);
-    				adj.get(i).setFutureCost(calcChebyshev(adj.get(i).getX(),adj.get(i).getY()));
-    				adj.get(i).setPrevNode(tmp);
-    				q.add(adj.get(i));
-			        }else{//if already in our queue
-			          if(((tmp.getPastCost() + 1) + (calcChebyshev(adj.get(i).getX(),adj.get(i).getY()))) < adj.get(i).getCost()){//and we found a better path
-		                   adj.get(i).setPastCost(tmp.getPastCost() + 1);//update
-		                   adj.get(i).setFutureCost(calcChebyshev(adj.get(i).getX(),adj.get(i).getY()));
-		                   adj.get(i).setPrevNode(tmp);
-		                    //q.add(adj.get(i));
-			          }
-			        }
-			    }
-				//System.out.println(q);
-			}
-		}
-		if(tmp.getX() != destx || tmp.getY() != desty){
-		    System.out.println("No path could be found!");
-		}else{
-    		ArrayList<Point> moveList = new ArrayList<Point>();
-    		System.out.println("Path Distance: " + dist);
-    		System.out.print("Finish: ");
-    		while(tmp.getPrevNode() != null){
-    		    System.out.println(tmp);
-    		    moveList.add(0,new Point(tmp.getX(),tmp.getY()));
-    		    tmp = tmp.getPrevNode();
-    		}
-    	    System.out.println("Start: " + tmp);
-    	    
-    	    for(int i = 0; i < moveList.size(); i++){
-    	        super.move(moveList.get(i));
 	    }
-		}
-
-		/* You can call pingMap if you want to see a part of the map */
-		//super.pingMap(new Point(5, 3));
-
-		/* You can call move to move your robot to a new location */
-		//super.move(new Point(3, 7));
+	    System.out.println("DONE");
 	}
 
 	public static void main(String[] args) {
