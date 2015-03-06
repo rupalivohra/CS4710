@@ -20,9 +20,11 @@ public class MyRobotClassUncertain1 extends Robot {
 	private static int starty;
 	private HashSet<Node> closed;
 	private static int maxCheby;
+	private static int pollingScheme;
 	private static ArrayList<Node> moveList;
+	private boolean reusePings = false;
 
-	public MyRobotClassUncertain1(int r, int c, Point start, Point dest) {
+	public MyRobotClassUncertain1(int r, int c, Point start, Point dest, int windowSize, int scheme) {
 		/*
 		 * int r = numRows of map int c = numCols of map Point start = start
 		 * location Point dest = destination location
@@ -38,7 +40,8 @@ public class MyRobotClassUncertain1 extends Robot {
 		desty = dest.y;
 		Comparator<Node> comparator = new NodeCostComparator();
 		q = new PriorityQueue<Node>(r * c, comparator);
-		maxCheby = 3;
+		maxCheby = windowSize;
+		pollingScheme = scheme;
 	}
 
 	public String getMap(int rowIndex, int colIndex) {
@@ -109,12 +112,29 @@ public class MyRobotClassUncertain1 extends Robot {
 	    int count = 0;
 	    int dist = calcChebyshev(p,current);
 	    String tmp;
-	    //for(int i = 0; i < (2 * dist) + 1; i++){
-	    for(int i = 0; i < dist; i++){
-	        tmp = super.pingMap(p);
-	        //System.out.println(tmp);
-	        if(tmp.equals("O")){
-	            count++;
+	    if(pollingScheme == 1){
+	        for(int i = 0; i < (2 * dist) + 1; i++){
+	            tmp = super.pingMap(p);
+	            //System.out.println(tmp);
+	            if(tmp.equals("O")){
+	                count++;
+	            }
+	    }
+	    }else if (pollingScheme == 2){
+	        for(int i = 0; i < (dist * dist); i++){
+	            tmp = super.pingMap(p);
+	            //System.out.println(tmp);
+	            if(tmp.equals("O")){
+	                count++;
+	            }
+	        }
+	    }else{
+	        for(int i = 0; i < dist; i++){
+	            tmp = super.pingMap(p);
+	            //System.out.println(tmp);
+	            if(tmp.equals("O")){
+	                count++;
+	            }
 	        }
 	    }
 	    
@@ -218,11 +238,20 @@ public class MyRobotClassUncertain1 extends Robot {
                             if(known.containsKey(temp_point)){
                                 temp_str = known.get(temp_point);
                             }else{
+                                if(reusePings){
                                 if(map[horz][vert] != null){
+                                    //System.out.println("REUSED");
                                     temp_str = map[horz][vert];
+                                    map[horz][vert] = null;
                                 }else{
                                 temp_str = poll(temp_point, new Point(start_node.getX(),start_node.getY()));
+                                map[horz][vert] = temp_str;
                                 }
+                                }else{
+                                    temp_str = poll(temp_point, new Point(start_node.getX(),start_node.getY()));
+                                    }
+                            
+                                
                             }
                             //If temp_str is valid, make a node for it and add it to nodeMap
                             if(!temp_str.equals("X")){
@@ -277,7 +306,7 @@ public class MyRobotClassUncertain1 extends Robot {
 			/* Create a robot that will run around in the World */
 			MyRobotClassUncertain1 myRobot = new MyRobotClassUncertain1(myWorld.numRows(),
 					myWorld.numCols(), myWorld.getStartPos(),
-					myWorld.getEndPos());
+					myWorld.getEndPos(), 3, 0);
 			myRobot.addToWorld(myWorld);
 
 			/* Tell the robot to travel to the destination */
