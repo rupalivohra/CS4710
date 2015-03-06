@@ -38,7 +38,7 @@ public class MyRobotClassUncertain1 extends Robot {
 		desty = dest.y;
 		Comparator<Node> comparator = new NodeCostComparator();
 		q = new PriorityQueue<Node>(r * c, comparator);
-		maxCheby = 4;
+		maxCheby = 3;
 	}
 
 	public String getMap(int rowIndex, int colIndex) {
@@ -102,7 +102,6 @@ public class MyRobotClassUncertain1 extends Robot {
 		return true;
 	}
 	
-	//TODO: Implement this
 	public String poll(Point p, Point current){
 	    
 	    
@@ -110,6 +109,7 @@ public class MyRobotClassUncertain1 extends Robot {
 	    int count = 0;
 	    int dist = calcChebyshev(p,current);
 	    String tmp;
+	    //for(int i = 0; i < (2 * dist) + 1; i++){
 	    for(int i = 0; i < dist; i++){
 	        tmp = super.pingMap(p);
 	        //System.out.println(tmp);
@@ -117,11 +117,12 @@ public class MyRobotClassUncertain1 extends Robot {
 	            count++;
 	        }
 	    }
+	    
 	    if(count >= (dist/2)){
-	        //System.out.println("O");
+	        //System.out.println("CHOOSE O");
 	        return "O";
 	    }else{
-	        //System.out.println("X");
+	        //System.out.println("CHOOSE X");
 	        return "X";
 	    }
 	    
@@ -137,6 +138,9 @@ public class MyRobotClassUncertain1 extends Robot {
 	    //System.out.println("DEST: " + destx + "," + desty);
 	    known.put(new Point(startx,starty), "S");
 	    nodeMap.put(new Point(startx,starty), new Node(startx,starty, calcChebyshev(startx,starty)));
+	    
+	    //System.out.println(map[2][2]);
+	    
 	    //Push start onto queue
 	    q.add(nodeMap.get(new Point(startx,starty)));
 	    //while queue not empty and not at finish
@@ -166,13 +170,13 @@ public class MyRobotClassUncertain1 extends Robot {
                 //As moving, add nodes hit to known set, to save pings
 	            for(int i = 0; i < moveList.size(); i++){
 	                temp_p = new Point(moveList.get(i).getX(),moveList.get(i).getY());
-	                System.out.println("ATTEMPTING TO MOVE TO: " + temp_p);
+	                //System.out.println("ATTEMPTING TO MOVE TO: " + temp_p);
 	                super.move(temp_p);
 	                //nodeMap.get(super.getPosition()).setVisited();
 	                if(super.getPosition().equals(temp_p)){
 	                    known.put(temp_p, "O");
 	                }else{//If we get to the node or we hit an unexpected barrier, empty queue, add current position and start over
-	                    System.out.println("FAILED MOVE TO: " + temp_p + " FROM: " + super.getPosition());
+	                    //System.out.println("FAILED MOVE TO: " + temp_p + " FROM: " + super.getPosition());
 	                    known.put(temp_p, "X");
 	                    start_node = nodeMap.get(super.getPosition());
 	                    cur_node = nodeMap.get(super.getPosition());
@@ -214,7 +218,11 @@ public class MyRobotClassUncertain1 extends Robot {
                             if(known.containsKey(temp_point)){
                                 temp_str = known.get(temp_point);
                             }else{
-                                temp_str = poll(temp_point, new Point(i,j));
+                                if(map[horz][vert] != null){
+                                    temp_str = map[horz][vert];
+                                }else{
+                                temp_str = poll(temp_point, new Point(start_node.getX(),start_node.getY()));
+                                }
                             }
                             //If temp_str is valid, make a node for it and add it to nodeMap
                             if(!temp_str.equals("X")){
@@ -264,7 +272,7 @@ public class MyRobotClassUncertain1 extends Robot {
 			 * Create a world. Pass the input filename first. Second parameter
 			 * is whether or not the world is uncertain.
 			 */
-			World myWorld = new World("bin/maze.txt", true);
+			World myWorld = new World("bin/manhattan.txt", true);
 
 			/* Create a robot that will run around in the World */
 			MyRobotClassUncertain1 myRobot = new MyRobotClassUncertain1(myWorld.numRows(),
