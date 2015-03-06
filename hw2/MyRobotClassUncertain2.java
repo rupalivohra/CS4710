@@ -234,6 +234,7 @@ public class MyRobotClassUncertain2 extends Robot {
 		// System.out.println(partitioned);
 
 		// calculate directional weight
+		boolean finishNextDoor = false;
 		if (indexOfSF == -1) { // start and end aren't in the same grid
 			ArrayList<GridNode> neighbors = new ArrayList<GridNode>();
 			GridNode containsStart = partitioned.get(indexOfS);
@@ -241,23 +242,27 @@ public class MyRobotClassUncertain2 extends Robot {
 			for (int i = 0; i < partitioned.size(); i++) {
 				if (containsStart.isNeighbor(partitioned.get(i))) {
 					neighbors.add(partitioned.get(i));
+					if (containsStart.isNeighbor(containsFinish)) {
+						finishNextDoor = true;
+					}
 				}
 			}
+
 			HashMap<GridNode, Integer> distances = new HashMap<GridNode, Integer>();
 			for (int i = 0; i < neighbors.size(); i++) {
 				distances.put(neighbors.get(i), GridNode.calcChebyshev(
 						containsFinish, neighbors.get(i)));
 			}
+			
 			// make the Chebyshev distances either 1, 2, or 3
 			int min = Collections.min(distances.values());
-			// System.out.println(min);
+//			System.out.println(min);
 			// NOTE TO SELF: ERROR WHERE IT DOESNT PICK UP CONTAINSFINISH AS
 			// CLOSEST NEIGHBOR
+			System.out.println("grid size: " + gridSize);
 			System.out.println(GridNode.calcChebyshev(containsFinish,
-					containsFinish));
-			if (min == 0) {
-				System.out.println("Final is neighbor node");
-			}
+			 containsFinish));
+			
 			int toSubtract = min - 1;
 			int totalCheby = 0;
 			for (Map.Entry<GridNode, Integer> entry : distances.entrySet()) {
@@ -274,12 +279,13 @@ public class MyRobotClassUncertain2 extends Robot {
 				entry.getKey().setDistanceToFinishWeight(
 						(double) entry.getValue() / totalCheby);
 			}
+
 			// at this point, the weights associated with the distance to finish
 			// has been handled
 
 			// TODO: handle sampling & related weight
 		} else {
-			// TODO: handle S&F within same grid
+			// TODO: handle S&F within same grid (direct aim?)
 		}
 
 		// Push start onto queue
