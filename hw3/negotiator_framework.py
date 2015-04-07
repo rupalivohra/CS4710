@@ -2,7 +2,6 @@ from csv import DictReader
 from sys import argv, exit
 from itertools import islice
 from negotiator import Negotiator
-from negotiator_simple import NegotiatorSimple
 from random import seed, randint
 
 # read_scenario(parameterfile_name : String) --> (int, list(dict))
@@ -26,24 +25,36 @@ def read_scenario(parameterfile_name):
     # The main negotiation function, responsible for running a single scenario & coordinating interactions between the two
     # negotiators.
 def negotiate(num_iterations, negotiator_a, negotiator_b):
-    # Get the initial offers from each negotiator - we pass in None to signify that no previous opposing offers have been made
-    (offer_a, offer_b) = (negotiator_a.make_offer(None), negotiator_b.make_offer(None))
+    # Get the initial offer from negotiator a - we pass in None to signify that no previous opposing offers have been made
+    (offer_a, offer_b) = (negotiator_a.make_offer(None), None)
+
     # We scale the reported utility by a random factor
     a_scale = randint(1, 11)
     b_scale = randint(1, 11)
+
     # Keep trading offers until we reach an agreement or the iteration limit, whichever comes first
     for i in range(num_iterations):
         print(offer_a, offer_b)
+        
         # Get from each negotiator the utility it received from the offer it most recently gave 
         utility = (a_scale * negotiator_a.utility(), b_scale * negotiator_b.utility())
-        negotiator_a.receive_utility(utility[1])
+        # Send b the latest offer from a and allow it to rebut
         negotiator_b.receive_utility(utility[0])
+        offer_b = negotiator_b.make_offer(offer_a)
+        
         # We signify agreement by both offers being structurally equal
         if offer_a == offer_b:
             return (True, offer_a, i)
-        # If we didn't agree, let each negotiator know what the other was offering, and get their counteroffer
+
+        # If we didn't agree, let a respond to b's offer, recalculate utility and send 'a' the info
+        utility = (a_scale * negotiator_a.utility(), b_scale * negotiator_b.utility())
+        negotiator_a.receive_utility(utility[1])
         offer_a = negotiator_a.make_offer(offer_b)
-        offer_b = negotiator_b.make_offer(offer_a)
+
+        if offer_a == offer_b:
+            return (True, offer_a, i)
+
+
     # If we failed overall, then there's no ordering to return
     return (False, None, num_iterations)
 
@@ -54,7 +65,7 @@ if __name__ == "__main__":
         exit(-42)
     score_a = score_b = 0
     # We will replace Negotiator here with <your id>_Negotiator, as specified in the Readme
-    negotiator_a = NegotiatorSimple()
+    negotiator_a = Negotiator()
     negotiator_b = Negotiator()
     for scenario in argv[1:]:
         # Get the scenario parameters
