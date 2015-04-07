@@ -1,0 +1,7 @@
+AIHW3 Strategies:
+
+1. Model opponent and determine expected reward, compare to value of the given offer, accept if it is greater. 
+   Model should be hidden markov, but how? Use prob to model the shift in utility expected from opponent?
+2. Start with ideal offer. Make offers of slightly lower amounts each time, swapping one of the opponents positions for one of the ones in our last offer.
+   If they continue to take utility cuts, keep going. If they don't resend the last offer until they go down. Accept anything with greater utility for us than our last offer.
+ 
