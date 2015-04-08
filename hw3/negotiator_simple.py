@@ -1,5 +1,5 @@
 from negotiator_base import BaseNegotiator
-from random import random, shuffle
+from random import random, shuffle, randint
 from functools import reduce
 
 # Example negotiator implementation, which randomly chooses to accept
@@ -17,27 +17,30 @@ class NegotiatorSimple(BaseNegotiator):
     
     def initialize(self, preferences, iter_limit):
         BaseNegotiator.initialize(self,preferences, iter_limit)
-        self.offer = self.preferences
+        self.offer = self.preferences[:]
+        self.num_iters = iter_limit
+        self.turn = True
 
     def evaluate(self, offer):
-        total = len(self.preferences)
-        return reduce(lambda points, item: points + ((total / (offer.index(item) + 1)) - abs(offer.index(item) - self.preferences.index(item))), offer, 0)
+        temp_offer = self.offer[:]
+        self.offer = offer
+        utils = self.utility()
+        self.offer = temp_offer[:]
+        return utils
     
     def make_offer(self, offer):
         self.last_utility = self.utility()
+        self.turn = not self.turn
         if offer:
-            if self.evaluate(offer[:]) > self.last_utility:
+            if self.evaluate(offer) > self.last_utility:
                 return offer
             if self.opponent_utility - self.opponent_last_utility < 0:
                 #give a little bit
-                temp_offer = self.offer
+                temp_offer = self.offer[:]
                 cur_util = self.evaluate(temp_offer)
-				#TODO: Find a good way to generate offers that have slightly lower utility
-				#NOTE: not a good approach to finding feasible solutions
-                #while(cur_util >= self.last_utility or cur_util < utility() + self.opponent_utility - self.opponent_last_utility):
-                #    shuffle(temp_offer)
-                #    cur_util = self.evaluate(temp_offer)
-                self.offer = temp_offer
+                temp_offer.insert(randint(0,len(self.offer)-1),temp_offer.pop(randint(0,len(self.offer)-1)))
+                temp_offer[3], temp_offer[4] = temp_offer[4], temp_offer[3]
+                self.offer = temp_offer[:]
                 return self.offer
             else:
                 #resend previous offer
