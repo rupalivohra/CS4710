@@ -73,7 +73,14 @@ Find some compromise
 
 
 
-
+Prob idea:
+Start: match whatever behavior they're most likely to do, randomly offer within level
+	 u s d
+   u u s d
+   s u s s
+   d u u s
+Expanded: determine what led to a given change, keep counts based on contributing factors(what we did last, what they did last)
+Assess the situation before making an offer. Guess what they'll do. If they will give us an up, do it. If they will put us down or equal, go up and reoffer, or take the current.
 
 
 
