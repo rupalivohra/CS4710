@@ -6,3 +6,109 @@ AIHW3 Strategies:
    If they continue to take utility cuts, keep going. If they don't, resend the last offer until they go down. Accept anything with greater utility for us than our last offer.
 3. Try offering something of higher utility to us than the previous response. See how the opponent reacts. If the opponent seems to not notice, try going higher. Otherwise, continue going in the trend of slightly lower amounts each time.
 4. If the opponent tries to make their utility go up from their previous offer (and makes ours go lower), play hardball (i.e. go higher in our own utility). If they try to do this at the end, screw us both over.
+5. We could do something similar to the BKT example, except decide between stubborn and cooperative. If they are likely cooperative on the ith round, accounting for flukes, we cooperate. Otherwise stand firm.
+
+Implement a system to compare the expected reward of going down it with the known reward of taking the current offer.
+To determine expected reward, 
+
+Start at 75% utility for us
+Do one round of ups/downs to set up algo
+Track their response to our increases/decreases
+Use this to form a table of probs(up given down, down given down, up given up, down given up)
+Once we have some idea what they will do in response to our action, in subsequent rounds we can look at roughly what they'll counter if we go up and roughly what they'll counter if we go down
+Compare those two values against what they already offered
+If no higher option, accept given
+If one of two gets us a better utility, offer that. If both, offer the one with better prob
+If all options lead to a utility loss for us, send our preference list.
+
+
+Pseudo:
+Get all permutations of list
+For each perm
+	eval utility
+	add to dict[WILL FLOATS SCREW THIS UP?]
+Initialize all probs to be even, all counts to 0
+
+
+Start at utility of pref, rounds count at max
+If(A): send pref
+If(B): read in first offer and start tracking them
+While(offer < utility than our last offer)
+	determine if they went up or down
+	determine what that was in response to(our move and theirs)
+	update the probs
+	calc total prob they'll go up or down for our decision and their last move
+	make the decision that leads to a great prob of them taking  utility hit
+	
+	
+	
+	
+	
+	
+	
+	
+	
+While(offer < moving threshold):
+	determine if they gave us better or worse
+	determine what that was in response to
+	update probs
+	calc the prob they'll give us better or worse based on our action and their move
+	do the action that maximizes the chance they bring our offer up
+	
+	
+	
+	
+Rupali Idea:
+Compute Permutations
+Evaluate all
+Store with utility
+Sort by utility
+Read in opponent offer
+Store opponent offer by utility
+Compare their max offer after however many rounds to ours
+Find some compromise
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Saving previous negotiator make_offer, just in case
+        self.last_utility = self.utility()
+        self.turn = not self.turn
+        if offer:
+            if self.evaluate(offer) > self.last_utility:
+                return offer
+            if self.opponent_utility - self.opponent_last_utility < 0:
+                #give a little bit
+                temp_offer = self.offer[:]
+                cur_util = self.evaluate(temp_offer)
+                #temp_offer.insert(randint(0,len(self.offer)-1),temp_offer.pop(randint(0,len(self.offer)-1)))
+                #temp_offer[3], temp_offer[4] = temp_offer[4], temp_offer[3]
+                self.offer = temp_offer[:]
+                return self.offer
+            else:
+                #resend previous offer
+                return self.offer
+        else:
+            return self.preferences

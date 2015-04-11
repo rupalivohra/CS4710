@@ -1,6 +1,8 @@
 from negotiator_base import BaseNegotiator
 from random import random, shuffle, randint
 from functools import reduce
+import itertools
+import math
 
 # Example negotiator implementation, which randomly chooses to accept
 # an offer or return with a randomized counteroffer.
@@ -14,12 +16,30 @@ class NegotiatorSimple(BaseNegotiator):
         self.opponent_utility = float("inf")
         self.opponent_last_utility = float("inf")
         self.last_utility = float("inf")
+        self.options = {}
+        self.util_levels = []
+        self.current_level = 0
+        self.stepsize = 1
+        self.step = 1
     
     def initialize(self, preferences, iter_limit):
         BaseNegotiator.initialize(self,preferences, iter_limit)
         self.offer = self.preferences[:]
         self.num_iters = iter_limit
         self.turn = True
+        temp_options = list(itertools.permutations(self.offer,len(self.offer)))
+        #print (temp_options)
+        for option in temp_options:
+            temp_util = int(round(self.evaluate(option),0))
+            if(temp_util not in self.options.keys()):
+                self.options[temp_util] = []
+            self.options[temp_util].append(option)
+        #print (self.options)
+        self.util_levels = sorted(self.options.keys(), reverse = True)
+        self.current_level = 0
+        self.stepsize = math.ceil( iter_limit / len(self.util_levels))
+        self.step = self.stepsize
+        #print (self.options[self.current_level])
 
     def evaluate(self, offer):
         temp_offer = self.offer[:]
@@ -29,24 +49,15 @@ class NegotiatorSimple(BaseNegotiator):
         return utils
     
     def make_offer(self, offer):
-        self.last_utility = self.utility()
-        self.turn = not self.turn
-        if offer:
-            if self.evaluate(offer) > self.last_utility:
-                return offer
-            if self.opponent_utility - self.opponent_last_utility < 0:
-                #give a little bit
-                temp_offer = self.offer[:]
-                cur_util = self.evaluate(temp_offer)
-                temp_offer.insert(randint(0,len(self.offer)-1),temp_offer.pop(randint(0,len(self.offer)-1)))
-                temp_offer[3], temp_offer[4] = temp_offer[4], temp_offer[3]
-                self.offer = temp_offer[:]
-                return self.offer
-            else:
-                #resend previous offer
-                return self.offer
-        else:
-            return self.preferences
+        current_util_level = self.util_levels[self.current_level]
+        self.step = self.step - 1
+        if(self.step < 1):
+            self.step = self.stepsize
+            self.current_level = self.current_level + 1
+        random_index = randint(0, len(self.options[current_util_level]) - 1)
+        self.offer = list(self.options[current_util_level][random_index])
+        print (self.utility())
+        return self.offer
             
     def receive_utility(self, utility):
         self.opponent_last_utility = self.opponent_utility
