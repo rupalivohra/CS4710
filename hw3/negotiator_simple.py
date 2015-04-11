@@ -50,6 +50,9 @@ class NegotiatorSimple(BaseNegotiator):
     
     def make_offer(self, offer):
         current_util_level = self.util_levels[self.current_level]
+        if offer and (self.evaluate(offer) >= current_util_level):
+            self.offer = offer
+            return offer
         self.step = self.step - 1
         if(self.step < 1):
             self.step = self.stepsize
