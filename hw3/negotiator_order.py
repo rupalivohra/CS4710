@@ -109,7 +109,7 @@ class NegotiatorOrder(BaseNegotiator):
             print("I am negotiator B")
             our_utility = round(self.get_utility(offer),5)  # the utility the offer gives us
             if offer not in self.received_offers:
-                self.map_opp_util[self.opponent_utility] = [offer]
+                self.map_opp_util[self.opponent_utility].append(offer)
             self.received_offers.append(offer)  # one offer stored more than once so we can preserve order of offers
             if our_utility == self.max_util:
                 self.offer = offer
@@ -120,21 +120,20 @@ class NegotiatorOrder(BaseNegotiator):
             else:
                 # assume offer was max_util for them (highest utility so far)
                 self.offer = self.find_highest(2)
-                print("here with ",self.offer)
-                # self.offer = self.preferences
                 print("Order negotiator sending offer: ", self.offer)
                 self.sent_offers.append(self.offer)
                 self.round += 1
                 return self.offer
 
-        # rounds after 2
+        # rounds after 1
         if offer not in self.received_offers:
-            self.map_opp_util[self.opponent_utility] = [offer]
+            self.map_opp_util[self.opponent_utility].append(offer)
             self.received_offers.append(offer)  # one offer stored more than once so we can preserve order of offers
-
+        print("round is",self.round)
         if self.opp_utilities[self.round] < self.opp_utilities[self.round-1]:
             #  if the opponent took a hit to their utility
             #  we can assume that the offer we sent them was worse for them than what they sent back
+            print("round in the if is",self.round)
             offer_as_tuple = tuple(self.sent_offers[self.round-1])
 
 
@@ -142,12 +141,14 @@ class NegotiatorOrder(BaseNegotiator):
         if random() < 0.05 and offer:
             # Very important - we save the offer we're going to return as self.offer
             self.offer = offer[:]
+            self.sent_offers.append(self.offer)
             self.round += 1
             return offer
         else:
             ordering = self.preferences[:]
             shuffle(ordering)
             self.offer = ordering[:]
+            self.sent_offers.append(self.offer)
             self.round += 1
             return self.offer
 
@@ -158,7 +159,8 @@ class NegotiatorOrder(BaseNegotiator):
         utility = round(utility, 5)
         self.opponent_utility = utility
         if utility not in self.opp_utilities:
-            self.opp_utilities.append(utility)
+            self.map_opp_util[utility] = []
+        self.opp_utilities.append(utility)
 
     # receive_results(self : BaseNegotiator, results : (Boolean, Float, Float, Int))
         # Store the results of the last series of negotiation (points won, success, etc.)
