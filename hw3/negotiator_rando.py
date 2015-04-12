@@ -22,10 +22,10 @@ class NegotiatorRando(BaseNegotiator):
         self.stepsize = 1
         self.step = 1
         self.proposed_offers = []
-        self.opponent_up = 0
-        self.opponent_down = 0
-        self.opponent_stays = 0
-        self.opponent_moves = 0
+        self.opponent_up = 1
+        self.opponent_down = 1
+        self.opponent_stays = 1
+        self.opponent_moves = 3
         #Add code to track the behavior we made before a turn and the behavior they made before a turn, then sort the counts by that
     
     def initialize(self, preferences, iter_limit):
