@@ -83,8 +83,30 @@ Expanded: determine what led to a given change, keep counts based on contributin
 Assess the situation before making an offer. Guess what they'll do. If they will give us an up, do it. If they will put us down or equal, go up and reoffer, or take the current.
 
 
+Extended:
+If(they'll probably go up based on their last move)
+	we go up
+if(they will go down based on last move)
+	we go down
+if(they'll put us down based on last move)
+	we go up
+if(they'll put us up based on last move)
+	we go down
 
+if(they'll go up or stay if we go up)
+	stay
+if(they'll go down if we go up)
+	go up
 
+if(they'll put us up or same if we go up)
+	go up
+if(they'll put us down if we go up)
+	stay
+
+if(they'll put us up or stay if we go down or stay)
+	go down
+if(they'll put us down or same if we go down or stay)
+	
 
 
 

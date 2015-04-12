@@ -1,9 +1,10 @@
 from csv import DictReader
 from sys import argv, exit
 from itertools import islice
-from negotiator_order import NegotiatorOrder
+#from negotiator_order import NegotiatorOrder
 from negotiator_simple import NegotiatorSimple
 from negotiator_prob import NegotiatorProb
+from negotiator_rando import NegotiatorRando
 from random import seed, randint
 
 # read_scenario(parameterfile_name : String) --> (int, list(dict))
@@ -71,7 +72,7 @@ if __name__ == "__main__":
     score_a = score_b = 0
     # We will replace Negotiator here with <your id>_Negotiator, as specified in the Readme
     negotiator_a = NegotiatorSimple()
-    negotiator_b = NegotiatorProb()
+    negotiator_b = NegotiatorRando()
     for scenario in argv[1:]:
         # Get the scenario parameters
         (num_iters, mapping) = read_scenario(scenario)

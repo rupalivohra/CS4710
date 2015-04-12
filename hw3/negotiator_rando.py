@@ -9,10 +9,10 @@ import math
 # Important things to note: We always set self.offer to be equal to whatever
 # we eventually pick as our offer. This is necessary for utility computation.
 # Second, note that we ensure that we never accept an offer of "None".
-class NegotiatorSimple(BaseNegotiator):
+class NegotiatorRando(BaseNegotiator):
     
     def __init__(self):
-        super(NegotiatorSimple, self).__init__()
+        super(NegotiatorRando, self).__init__()
         self.opponent_utility = float("inf")
         self.opponent_last_utility = float("inf")
         self.last_utility = float("inf")
@@ -21,11 +21,18 @@ class NegotiatorSimple(BaseNegotiator):
         self.current_level = 0
         self.stepsize = 1
         self.step = 1
+        self.proposed_offers = []
+        self.opponent_up = 0
+        self.opponent_down = 0
+        self.opponent_stays = 0
+        self.opponent_moves = 0
+        #Add code to track the behavior we made before a turn and the behavior they made before a turn, then sort the counts by that
     
     def initialize(self, preferences, iter_limit):
         BaseNegotiator.initialize(self,preferences, iter_limit)
         self.offer = self.preferences[:]
         self.num_iters = iter_limit
+        self.proposed_offers = []
         temp_options = list(itertools.permutations(self.offer,len(self.offer)))
         #print (temp_options)
         for option in temp_options:
@@ -48,14 +55,29 @@ class NegotiatorSimple(BaseNegotiator):
         return utils
     
     def make_offer(self, offer):
+        self.proposed_offers.append(offer)
         current_util_level = self.util_levels[self.current_level]
+        
+        #take any offer that is better than what we're looking for
         if offer and (self.evaluate(offer) >= current_util_level):
             self.offer = offer
             return offer
-        self.step = self.step - 1
-        if(self.step < 1):
-            self.step = self.stepsize
-            self.current_level = self.current_level + 1
+        
+        temp_change = []
+        for i in range(0,self.opponent_up):
+            temp_change.append(-1)
+        for i in range(0,self.opponent_stays):
+            temp_change.append(0)
+        for i in range(0,self.opponent_down):
+            temp_change.append(1)
+        
+        self.current_level += temp_change[randint(0,len(temp_change) - 1)]
+        if(self.current_level < 0):
+            self.current_level += 1
+        if(self.current_level > len(self.util_levels) - 1):
+            self.current_level -= 1
+        
+        current_util_level = self.util_levels[self.current_level]
         random_index = randint(0, len(self.options[current_util_level]) - 1)
         self.offer = list(self.options[current_util_level][random_index])
         #print (self.utility())
@@ -64,3 +86,10 @@ class NegotiatorSimple(BaseNegotiator):
     def receive_utility(self, utility):
         self.opponent_last_utility = self.opponent_utility
         self.opponent_utility = utility
+        self.opponent_moves += 1
+        if((self.opponent_utility - self.opponent_last_utility) > .005):
+            self.opponent_up += 1
+        elif((self.opponent_utility - self.opponent_last_utility) < -.005):
+            self.opponent_down += 1
+        else:
+            self.opponent_stays += 1

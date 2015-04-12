@@ -26,9 +26,6 @@ class NegotiatorProb(BaseNegotiator):
         self.opponent_down = 0
         self.opponent_stays = 0
         self.opponent_moves = 0
-        self.us_up = 0
-        self.us_down = 0
-        self.us_same = 0
         #Add code to track the behavior we made before a turn and the behavior they made before a turn, then sort the counts by that
     
     def initialize(self, preferences, iter_limit):
@@ -68,17 +65,18 @@ class NegotiatorProb(BaseNegotiator):
         
         if((self.opponent_up / self.opponent_moves) >= (self.opponent_down / self.opponent_moves)) and ((self.opponent_up / self.opponent_moves) >= (self.opponent_stays / self.opponent_moves)):
             if(self.current_level > 0):
-                print ("UP")
+                #print ("UP")
                 self.current_level -= 1        
         elif((self.opponent_down / self.opponent_moves) >= (self.opponent_stays / self.opponent_moves)):
             if(self.current_level < len(self.util_levels) - 1):
-                print ("DOWN")
+                #print ("DOWN")
                 self.current_level += 1
         #else stay where we are
         
+        current_util_level = self.util_levels[self.current_level]
         random_index = randint(0, len(self.options[current_util_level]) - 1)
         self.offer = list(self.options[current_util_level][random_index])
-        print (self.utility())
+        #print (self.utility())
         return self.offer
             
     def receive_utility(self, utility):
