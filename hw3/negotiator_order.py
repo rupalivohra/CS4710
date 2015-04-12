@@ -1,8 +1,10 @@
-from negotiator_base import BaseNegotiator
-from random import random, shuffle
 import itertools
-import decimal
+
 import distance
+
+from negotiator_base import BaseNegotiator
+
+import time
 
 # Example negotiator implementation, which randomly chooses to accept
 # an offer or return with a randomized counteroffer.
@@ -49,8 +51,13 @@ class NegotiatorOrder(BaseNegotiator):
         return util
 
     def calculate_combos(self, scenario):  # sorts each permutation by utility in the dictionary
+        #start = time.time()
+        #end = start + 20  # timeout after 20 seconds
+        #while time.time() < end:
         perms = itertools.permutations(scenario, len(scenario))
+            #print("time is", time.time())
         for perm in perms:
+            #print("permutation:", perm)
             perm_util = round(self.get_utility(perm),5)
             if perm_util in self.utility_buckets:
                 self.map_util_to_list[perm_util].append(perm)
@@ -58,15 +65,6 @@ class NegotiatorOrder(BaseNegotiator):
                 self.utility_buckets.append(perm_util)
                 self.map_util_to_list[perm_util] = [perm]
         self.utility_buckets = sorted(self.utility_buckets,key=None,reverse=True)
-
-        # self.set_up_offer_map()
-
-    # def set_up_offer_map(self):
-    #     # sets the map to have as many entries as there are utility_buckets
-    #     ind = "?"
-    #     for i in range(0, len(self.utility_buckets)):
-    #         self.map_offer_to_potential_buckets[ind] = []
-    #         ind += "?"
 
     def set_up_weighted_avg(self):
         for val in self.preferences:
@@ -81,6 +79,7 @@ class NegotiatorOrder(BaseNegotiator):
         sum_unique_utilities = 0
         for key in self.map_opp_util.keys():
             sum_unique_utilities += key
+        print("sum_unique_utilities",sum_unique_utilities)
         for val in self.weighted_avg.keys():
             self.weighted_avg[val] = 0  # clear out previous guesses
             for offer in range(0, len(self.received_offers)):
@@ -88,6 +87,7 @@ class NegotiatorOrder(BaseNegotiator):
                 utility = self.opp_utilities[offer]
                 calc = (position*utility)/sum_unique_utilities
                 self.weighted_avg[val] += calc
+            print(val, "weighted avg is", self.weighted_avg[val])
         #print("The weighted averages are", self.weighted_avg)
         ret = []
         for index in range(0, len(self.preferences)):
@@ -104,7 +104,7 @@ class NegotiatorOrder(BaseNegotiator):
                         #print("looking at", look_at_this_offer)
                         cur_min = look_at_this_offer.index(key)
             ret.append(cur_min_val)
-        #print("The most likely set of preferences for opponent is", ret)
+        print("The most likely set of preferences for opponent is", ret)
         return ret
 
 
@@ -138,7 +138,8 @@ class NegotiatorOrder(BaseNegotiator):
         return bestOff
 
     def make_offer(self, offer):
-        self.received_offers.append(offer)
+        if offer:
+            self.received_offers.append(offer)
 
         # round 1
         if self.cur_round == 0 and offer is None:  # initial offer, we are person A
@@ -148,7 +149,7 @@ class NegotiatorOrder(BaseNegotiator):
             ordering = self.preferences[:]
             self.offer = ordering
             self.cur_round += 1
-            print("Order negotiator sending offer: ", self.offer)
+            print("Order negotiator A sending offer: ", self.offer)
             self.sent_offers.append(self.offer)
             return self.offer
         if self.cur_round == 0 and offer is not None:  # received an offer; we are person B
@@ -169,7 +170,7 @@ class NegotiatorOrder(BaseNegotiator):
                 # assume offer was max_util for them (highest utility so far)
                 input_offer = self.calculate_weighted_averages()
                 self.offer = self.find_highest(input_offer,self.num_buckets)
-                print("Order negotiator sending offer: ", self.offer)
+                print("Order negotiator B sending offer: ", self.offer)
                 self.sent_offers.append(self.offer)
                 self.cur_round += 1
                 return self.offer
@@ -179,21 +180,32 @@ class NegotiatorOrder(BaseNegotiator):
             self.map_opp_util[self.opponent_utility].append(offer)
         #self.received_offers.append(offer)  # one offer stored more than once so we can preserve order of offers
         #print("round is", self.cur_round)
-        if self.opp_utilities[self.cur_round] < self.opp_utilities[self.cur_round-1]:
-            #  if the opponent took a hit to their utility
-            #  we can assume that the offer we sent them was worse for them than what they sent back
-            self.num_buckets += 1
-            input_list = self.calculate_weighted_averages()
-            self.offer = self.find_highest(input_list, self.num_buckets)
-            # offer_as_tuple = tuple(self.sent_offers[self.cur_round-1])
-        elif self.opp_utilities[self.cur_round] == self.opp_utilities[self.cur_round-1]:
-            input_list = self.calculate_weighted_averages()
-            self.offer = self.find_highest(input_list, self.num_buckets)
-        else:
-            self.num_buckets -= 1
-            input_list = self.calculate_weighted_averages()
-            self.offer = self.find_highest(input_list, self.num_buckets)
-        print("Order negotiator sending offer: ", self.offer)
+        if not self.player_one and self.cur_round == 1 or self.cur_round > 1:
+            if self.opp_utilities[self.cur_round] < self.opp_utilities[self.cur_round-1]:
+                #  if the opponent took a hit to their utility
+                #  we can assume that the offer we sent them was worse for them than what they sent back
+                self.num_buckets += 1
+                input_list = self.calculate_weighted_averages()
+                self.offer = self.find_highest(input_list, self.num_buckets)
+                # offer_as_tuple = tuple(self.sent_offers[self.cur_round-1])
+            elif self.opp_utilities[self.cur_round] == self.opp_utilities[self.cur_round-1]:
+                input_list = self.calculate_weighted_averages()
+                self.offer = self.find_highest(input_list, self.num_buckets)
+            else:
+                self.num_buckets -= 1
+                input_list = self.calculate_weighted_averages()
+                self.offer = self.find_highest(input_list, self.num_buckets)
+        if self.player_one and self.cur_round == 1:
+            input_offer = self.calculate_weighted_averages()
+            self.offer = self.find_highest(input_offer, self.num_buckets)
+            print("Order negotiator A sending offer: ", self.offer)
+            self.sent_offers.append(self.offer)
+            #self.cur_round += 1
+            return self.offer
+        player = "A"
+        if not self.player_one:
+            player = "B"
+        print("Order negotiator",player,"sending offer: ", self.offer)
         self.sent_offers.append(self.offer)
         self.cur_round += 1
         return self.offer
