@@ -1,6 +1,7 @@
 from negotiator_base import BaseNegotiator
 from random import random, shuffle
 import itertools
+import decimal
 import distance
 
 # Example negotiator implementation, which randomly chooses to accept
@@ -30,7 +31,7 @@ class NegotiatorOrder(BaseNegotiator):
     def initialize(self, preferences, iter_limit):
         BaseNegotiator.initialize(self,preferences, iter_limit)
         self.offer = self.preferences[:]
-        self.max_util = self.utility()
+        self.max_util = round(self.utility(),5)
 
     def get_utility(self, offer):
         """
@@ -39,20 +40,22 @@ class NegotiatorOrder(BaseNegotiator):
         """
         orig_offer = self.offer
         self.offer = offer
-        util = self.utility()
+        util = round(self.utility(), 5)
         self.offer = orig_offer
         return util
 
     def calculate_combos(self, scenario):  # sorts each permutation by utility in the dictionary
         perms = itertools.permutations(scenario, len(scenario))
         for perm in perms:
-            perm_util = self.get_utility(perm)
+            perm_util = round(self.get_utility(perm),5)
             if perm_util in self.utility_buckets:
                 self.map_util_to_list[perm_util].append(perm)
             else:
                 self.utility_buckets.append(perm_util)
                 self.map_util_to_list[perm_util] = [perm]
-        self.utility_buckets.sort()
+        self.utility_buckets = sorted(self.utility_buckets,key=None,reverse=True)
+        print("utility buckets in sorted order: ",self.utility_buckets)
+
         # self.set_up_offer_map()
 
     # def set_up_offer_map(self):
@@ -61,6 +64,31 @@ class NegotiatorOrder(BaseNegotiator):
     #     for i in range(0, len(self.utility_buckets)):
     #         self.map_offer_to_potential_buckets[ind] = []
     #         ind += "?"
+
+    def find_highest(self, bucket_num):
+        """
+        must call this before updating the round number
+        :param bucket_num: the number of utility_buckets we are willing to look in; the best option from the highest_utility bucket is chosen
+        :return: an offer that works best for us with the smallest hamming distance from the given offer
+        """
+        if bucket_num > len(self.utility_buckets) - 1:
+            # ensure validity of utility_bucket
+            bucket_num = len(self.utility_buckets) - 1
+
+        bestOff = []
+        hamming_best = float("inf")
+        i = 0
+        for key in self.utility_buckets:
+            if i == bucket_num:
+                break
+            for offer in self.map_util_to_list[key]:
+                tempdist = distance.hamming(offer, self.received_offers[self.round])
+                if tempdist < hamming_best:
+                    hamming_best = tempdist
+                    bestOff = offer
+                    print("New best offer to counter ",self.received_offers[self.round]," is ",bestOff, "with distance",hamming_best,"and utility",key)
+            i+=1
+        return bestOff
 
     def make_offer(self, offer):
         self.received_offers.append(offer)
@@ -79,8 +107,7 @@ class NegotiatorOrder(BaseNegotiator):
         if self.round == 0 and offer is not None:  # received an offer; we are person B
             self.calculate_combos(offer)
             print("I am negotiator B")
-            self.round += 1
-            our_utility = self.get_utility(offer)  # the utility the offer gives us
+            our_utility = round(self.get_utility(offer),5)  # the utility the offer gives us
             if offer not in self.received_offers:
                 self.map_opp_util[self.opponent_utility] = [offer]
             self.received_offers.append(offer)  # one offer stored more than once so we can preserve order of offers
@@ -88,12 +115,17 @@ class NegotiatorOrder(BaseNegotiator):
                 self.offer = offer
                 print("Order negotiator accepting offer: ", self.offer)
                 self.sent_offers.append(self.offer)
+                self.round += 1
                 return offer
             else:
-                self.offer = self.preferences
+                # assume offer was max_util for them (highest utility so far)
+                self.offer = self.find_highest(2)
+                print("here with ",self.offer)
+                # self.offer = self.preferences
                 print("Order negotiator sending offer: ", self.offer)
                 self.sent_offers.append(self.offer)
-                return offer
+                self.round += 1
+                return self.offer
 
         # rounds after 2
         if offer not in self.received_offers:
@@ -104,7 +136,7 @@ class NegotiatorOrder(BaseNegotiator):
             #  if the opponent took a hit to their utility
             #  we can assume that the offer we sent them was worse for them than what they sent back
             offer_as_tuple = tuple(self.sent_offers[self.round-1])
-            self.map_offer_to_potential_buckets[offer_as_tuple] =
+
 
 
         if random() < 0.05 and offer:
@@ -123,6 +155,7 @@ class NegotiatorOrder(BaseNegotiator):
     # receive_utility(self : BaseNegotiator, utility : Float)
     # Store the utility the other negotiator received from their last offer
     def receive_utility(self, utility):
+        utility = round(utility, 5)
         self.opponent_utility = utility
         if utility not in self.opp_utilities:
             self.opp_utilities.append(utility)
