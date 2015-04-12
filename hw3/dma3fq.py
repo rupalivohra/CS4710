@@ -9,10 +9,10 @@ import math
 # Important things to note: We always set self.offer to be equal to whatever
 # we eventually pick as our offer. This is necessary for utility computation.
 # Second, note that we ensure that we never accept an offer of "None".
-class NegotiatorRando(BaseNegotiator):
+class Negotiator(BaseNegotiator):
     
     def __init__(self):
-        super(NegotiatorRando, self).__init__()
+        super(Negotiator, self).__init__()
         self.opponent_utility = float("inf")
         self.opponent_last_utility = float("inf")
         self.last_utility = float("inf")
