@@ -118,9 +118,10 @@ class Negotiator(BaseNegotiator):
             # ensure validity of utility_bucket
             bucket_num = len(self.utility_buckets) - 1
         if bucket_num < 1:
+            # self.num_buckets = 1
             bucket_num = 1
 
-        bestOff = []
+        best_off = []
         hamming_best = float("inf")
         i = 0
         for key in self.utility_buckets:
@@ -129,17 +130,20 @@ class Negotiator(BaseNegotiator):
             for offer in self.map_util_to_list[key]:
                 #tempdist = distance.hamming(offer, self.received_offers[self.cur_round])
                 tempdist = distance.hamming(offer, input_offer)
-                if tempdist < hamming_best:
+                if tempdist < hamming_best and offer != input_offer:
                     hamming_best = tempdist
-                    bestOff = offer
+                    best_off = offer
                     #print("New best offer to counter ",self.received_offers[self.cur_round]," is ",bestOff, "with distance",hamming_best,"and utility",key)
                     #print("New best offer to counter ",input_offer," is ",bestOff, "with distance",hamming_best,"and utility",key)
             i += 1
-        return bestOff
+        return best_off
 
     def make_offer(self, offer):
         if offer:
             self.received_offers.append(offer)
+            if offer == self.preferences:
+                self.offer = offer
+                return offer
 
         # round 1
         if self.cur_round == 0 and offer is None:  # initial offer, we are person A
