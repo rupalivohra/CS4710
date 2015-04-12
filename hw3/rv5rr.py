@@ -13,11 +13,11 @@ import time
 # Second, note that we ensure that we never accept an offer of "None".
 
 
-class NegotiatorOrder(BaseNegotiator):
+class Negotiator(BaseNegotiator):
     # Override the make_offer method from BaseNegotiator to accept a given offer 5%
     # of the time, and return a random permutation the rest of the time.
     def __init__(self):
-        super(NegotiatorOrder, self).__init__()
+        super(Negotiator, self).__init__()
         self.max_util = 0
         self.opponent_utility = float("inf")  # the most recently received utility
         self.opp_utilities = []  # a list in chronological order of opponent utilities
@@ -79,7 +79,7 @@ class NegotiatorOrder(BaseNegotiator):
         sum_unique_utilities = 0
         for key in self.map_opp_util.keys():
             sum_unique_utilities += key
-        print("sum_unique_utilities",sum_unique_utilities)
+        #print("sum_unique_utilities",sum_unique_utilities)
         for val in self.weighted_avg.keys():
             self.weighted_avg[val] = 0  # clear out previous guesses
             for offer in range(0, len(self.received_offers)):
@@ -87,7 +87,7 @@ class NegotiatorOrder(BaseNegotiator):
                 utility = self.opp_utilities[offer]
                 calc = (position*utility)/sum_unique_utilities
                 self.weighted_avg[val] += calc
-            print(val, "weighted avg is", self.weighted_avg[val])
+            # print(val, "weighted avg is", self.weighted_avg[val])
         #print("The weighted averages are", self.weighted_avg)
         ret = []
         for index in range(0, len(self.preferences)):
@@ -104,7 +104,7 @@ class NegotiatorOrder(BaseNegotiator):
                         #print("looking at", look_at_this_offer)
                         cur_min = look_at_this_offer.index(key)
             ret.append(cur_min_val)
-        print("The most likely set of preferences for opponent is", ret)
+        # print("The most likely set of preferences for opponent is", ret)
         return ret
 
 

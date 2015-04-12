@@ -1,11 +1,11 @@
 from csv import DictReader
 from sys import argv, exit
 from itertools import islice
-#from negotiator_order import NegotiatorOrder
-from negotiator import Negotiator
+from rv5rr import Negotiator as rv5rr
+#from negotiator import Negotiator
 from dma3fq import Negotiator as dma3fq
-from negotiator_simple import NegotiatorSimple
-from negotiator_prob import NegotiatorProb
+#from negotiator_simple import NegotiatorSimple
+#from negotiator_prob import NegotiatorProb
 #from negotiator_rando import NegotiatorRando
 from random import seed, randint
 
@@ -74,7 +74,7 @@ if __name__ == "__main__":
     score_a = score_b = 0
     # We will replace Negotiator here with <your id>_Negotiator, as specified in the Readme
     negotiator_a = dma3fq()
-    negotiator_b = NegotiatorSimple()
+    negotiator_b = rv5rr()
     for scenario in argv[1:]:
         # Get the scenario parameters
         (num_iters, mapping) = read_scenario(scenario)
