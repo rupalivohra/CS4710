@@ -4,7 +4,8 @@ import time
 
 
 def calculate_combos(scenario):  # sorts each permutation by utility in the dictionary
-    itertools.permutations(scenario, len(scenario))
+    my_list = list(itertools.permutations(scenario, len(scenario)))
+    return len(my_list)
 
 
 if __name__ == "__main__":
@@ -60,8 +61,9 @@ if __name__ == "__main__":
     for test in range(0, len(tests)):
         for i in range(0, 5):  # run the code segment 5 times and calc avg.
             time_before = time.clock()
-            calculate_combos(tests[test])
+            temp = calculate_combos(tests[test])
             time_after = time.clock()
+            print (temp)
             time_difference = time_after - time_before
             times[test].append(time_difference)
 
