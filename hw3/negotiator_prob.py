@@ -63,14 +63,15 @@ class NegotiatorProb(BaseNegotiator):
             self.offer = offer
             return offer
         
-        if((self.opponent_up / self.opponent_moves) >= (self.opponent_down / self.opponent_moves)) and ((self.opponent_up / self.opponent_moves) >= (self.opponent_stays / self.opponent_moves)):
-            if(self.current_level > 0):
-                #print ("UP")
-                self.current_level -= 1        
-        elif((self.opponent_down / self.opponent_moves) >= (self.opponent_stays / self.opponent_moves)):
-            if(self.current_level < len(self.util_levels) - 1):
-                #print ("DOWN")
-                self.current_level += 1
+        if(self.opponent_moves > 0):
+            if((self.opponent_up / self.opponent_moves) >= (self.opponent_down / self.opponent_moves)) and ((self.opponent_up / self.opponent_moves) >= (self.opponent_stays / self.opponent_moves)):
+                if(self.current_level > 0):
+                    #print ("UP")
+                    self.current_level -= 1        
+            elif((self.opponent_down / self.opponent_moves) >= (self.opponent_stays / self.opponent_moves)):
+                if(self.current_level < len(self.util_levels) - 1):
+                    #print ("DOWN")
+                    self.current_level += 1
         #else stay where we are
         
         current_util_level = self.util_levels[self.current_level]
