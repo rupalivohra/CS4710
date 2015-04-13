@@ -5,7 +5,7 @@ from itertools import islice
 #from negotiator import Negotiator
 from dma3fq import Negotiator as dma3fq
 #from negotiator_simple import NegotiatorSimple
-from negotiator_prob import NegotiatorProb
+#from negotiator_prob import NegotiatorProb
 #from negotiator_rando import NegotiatorRando
 from random import seed, randint
 
@@ -74,7 +74,7 @@ if __name__ == "__main__":
     score_a = score_b = 0
     # We will replace Negotiator here with <your id>_Negotiator, as specified in the Readme
     negotiator_a = dma3fq()
-    negotiator_b = NegotiatorProb()
+    negotiator_b = dma3fq()
     for scenario in argv[1:]:
         # Get the scenario parameters
         (num_iters, mapping) = read_scenario(scenario)
@@ -87,20 +87,21 @@ if __name__ == "__main__":
         # Give each negotiator their preferred item ordering
         negotiator_a.initialize(a_order, num_iters)
         negotiator_b.initialize(b_order, num_iters)
-        # Get the result of the negotiation
-        (result, order, count) = negotiate(num_iters, negotiator_a, negotiator_b)
-        # Assign points to each negotiator. Note that if the negotiation failed, each negotiatior receives a negative penalty
-        # However, it is also possible in a "successful" negotiation for a given negotiator to receive negative points
-        (points_a, points_b) = (negotiator_a.utility(), negotiator_b.utility()) if result else (
-            -len(a_order), -len(b_order))
-        results = (result, points_a, points_b, count)
-        score_a += points_a
-        score_b += points_b
-        # Update each negotiator with the final result, points assigned, and number of iterations taken to reach an agreement
-        negotiator_a.receive_results(results)
-        negotiator_b.receive_results(results)
-        print(
-            "{} negotiation:\n\tNegotiator A: {}\n\tNegotiator B: {}".format("Successful" if result else "Failed",
-                                                                             points_a,
-                                                                             points_b))
+        for i in range(0,3):
+            # Get the result of the negotiation
+            (result, order, count) = negotiate(num_iters, negotiator_a, negotiator_b)
+            # Assign points to each negotiator. Note that if the negotiation failed, each negotiatior receives a negative penalty
+            # However, it is also possible in a "successful" negotiation for a given negotiator to receive negative points
+            (points_a, points_b) = (negotiator_a.utility(), negotiator_b.utility()) if result else (
+                -len(a_order), -len(b_order))
+            results = (result, points_a, points_b, count)
+            score_a += points_a
+            score_b += points_b
+            # Update each negotiator with the final result, points assigned, and number of iterations taken to reach an agreement
+            negotiator_a.receive_results(results)
+            negotiator_b.receive_results(results)
+            print(
+                "{} negotiation:\n\tNegotiator A: {}\n\tNegotiator B: {}".format("Successful" if result else "Failed",
+                                                                                 points_a,
+                                                                                 points_b))
     print("Final result:\n\tNegotiator A: {}\n\tNegotiator B: {}".format(score_a, score_b))
