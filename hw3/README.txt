@@ -1,0 +1,2 @@
+For rv5rr.py, you may need to install the distance package. I was able to directly download it from a pop up that appeared in PyCharm, but more details are available here: https://pypi.python.org/pypi/Distance/
+Both files depend on calculation permutations, and thus will not work on lists with large elements. More information on this is available in the write up.
