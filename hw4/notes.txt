@@ -1,0 +1,11 @@
+Other Race never >50K
+
+age & education level
+age & marital-status
+age & relationship (slight)
+age & race
+age & national-country-origin
+age & capital-gain
+age & capital-loss
+
+workclass & education
