@@ -167,14 +167,38 @@ public class V1 extends Classifier {
 					split = fillInMissingVals(split);
 				}
 				//if ? in array, the value was missing
-				double p1 = 0; //P(Y = 1)
-				double p0 = 0; //P(Y = 0)
+				double p1 = 1; //P(Y = 1)
+				double p0 = 1; //P(Y = 0)
 				for (int i = 0; i < split.length; i++) {
 					if (!split[i].equals("?")) {
-						
+						//handle numeric
+						if (numericValsGreater.containsKey(split[i])) {
+							double sub = Double.parseDouble(split[i]) - numericValsGreater.get(split[i])[0];
+							double exp = -1*Math.pow(sub,2)/(2*numericValsGreater.get(split[i])[1]);
+							double numerator = Math.pow(Math.E, exp);
+							double den = Math.sqrt(2*Math.PI*numericValsGreater.get(split[i])[1]);
+							p1 = p1*(numerator/den);
+						}
+						if (numericValsLess.containsKey(split[i])) {
+							double sub = Double.parseDouble(split[i]) - numericValsLess.get(split[i])[0];
+							double exp = -1*Math.pow(sub,2)/(2*numericValsLess.get(split[i])[1]);
+							double numerator = Math.pow(Math.E, exp);
+							double den = Math.sqrt(2*Math.PI*numericValsLess.get(split[i])[1]);
+							p1 = p1*(numerator/den);
+						}
+						//handle discrete
+						if (featureProbGreater.containsKey(split[i])) {
+							p1 = p1*featureProbGreater.get(split[i]);
+						}
+						if (featureProbLess.containsKey(split[i])) {
+							p0 = p0*featureProbLess.get(split[i]);
+						}
 					}
 				}
+				p1 = p1*pGreater;
+				p0 = p0*(1-pGreater);
 				
+				System.out.println("p1: " + p1 + ", p0: " + p0);
 				//print results
 				if (p1 > p0) {
 					System.out.println(">50K");
