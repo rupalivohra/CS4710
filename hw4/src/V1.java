@@ -1,5 +1,6 @@
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -88,7 +89,7 @@ public class V1 extends Classifier {
 	@Override
 	public void train(String trainingDataFilpath) {
 		// read in the file
-		// add in a 0 for every feature that does not exist
+		// add in a ? for every feature that does not exist
 		int numGreater = 0; // tracks how many people have > 50K; y=1 means >50K
 		int numLessThan = 0;
 		try {
@@ -159,6 +160,7 @@ public class V1 extends Classifier {
 	public void makePredictions(String testDataFilepath) {
 		try {
 			Scanner s = new Scanner(new File(testDataFilepath));
+			PrintWriter mysol = new PrintWriter("mysol");
 			while (s.hasNextLine()) {
 				//one case at a time
 				String[] split = s.nextLine().split(" ");
@@ -172,14 +174,14 @@ public class V1 extends Classifier {
 				for (int i = 0; i < split.length; i++) {
 					if (!split[i].equals("?")) {
 						//handle numeric
-						if (numericValsGreater.containsKey(split[i])) {
+						if (numericValsGreater.containsKey(split[i])) { // y = 1
 							double sub = Double.parseDouble(split[i]) - numericValsGreater.get(split[i])[0];
 							double exp = -1*Math.pow(sub,2)/(2*numericValsGreater.get(split[i])[1]);
 							double numerator = Math.pow(Math.E, exp);
 							double den = Math.sqrt(2*Math.PI*numericValsGreater.get(split[i])[1]);
 							p1 = p1*(numerator/den);
 						}
-						if (numericValsLess.containsKey(split[i])) {
+						if (numericValsLess.containsKey(split[i])) { // y = 0
 							double sub = Double.parseDouble(split[i]) - numericValsLess.get(split[i])[0];
 							double exp = -1*Math.pow(sub,2)/(2*numericValsLess.get(split[i])[1]);
 							double numerator = Math.pow(Math.E, exp);
@@ -187,10 +189,10 @@ public class V1 extends Classifier {
 							p1 = p1*(numerator/den);
 						}
 						//handle discrete
-						if (featureProbGreater.containsKey(split[i])) {
+						if (featureProbGreater.containsKey(split[i])) { // y = 1
 							p1 = p1*featureProbGreater.get(split[i]);
 						}
-						if (featureProbLess.containsKey(split[i])) {
+						if (featureProbLess.containsKey(split[i])) { // y = 0
 							p0 = p0*featureProbLess.get(split[i]);
 						}
 					}
@@ -198,22 +200,28 @@ public class V1 extends Classifier {
 				p1 = p1*pGreater;
 				p0 = p0*(1-pGreater);
 				
-				System.out.println("p1: " + p1 + ", p0: " + p0);
+				//System.out.println("p1: " + p1 + ", p0: " + p0);
 				//print results
 				if (p1 > p0) {
-					System.out.println(">50K");
+//					System.out.println(">50K");
+					mysol.println(">50K");
 				} else if (p1 < p0) {
-					System.out.println("<=50K");
+//					System.out.println("<=50K");
+					mysol.println("<=50K");
 				} else { //if equal probabilities, it's a toss-up
 					Random r = new Random();
 					int i = r.nextInt(2);
 					if (i == 0) {
-						System.out.println(">50K");
+						//System.out.println(">50K");
+						mysol.println(">50K");
 					} else {
-						System.out.println("<=50K");
+						//System.out.println("<=50K");
+						mysol.println("<=50K");
 					}
 				}
 			}
+			mysol.close();
+			s.close();
 		} catch (FileNotFoundException e) {
 			System.err.print("Test file not found. Exiting.");
 			return;
@@ -299,8 +307,9 @@ public class V1 extends Classifier {
 
 	public static void main(String[] args) throws Exception {
 		V1 hello = new V1("census.names");
-		hello.train("census.train");
-		hello.makePredictions("census.test");
+		hello.train("500_train_part_0");
+		hello.makePredictions("500_test_part_0");
+		
 	}
 
 }
