@@ -1,82 +1,70 @@
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Scanner;
 
-public class TestCaseGenerator {
+
+public class TestCaseGeneratorOriginal {
 
 	public static void main(String[] args) throws FileNotFoundException {
 		V1 hello = new V1("census.names");
-		System.out.print("Enter num training cases (0-1000): ");
-		Scanner key = new Scanner(System.in);
-		int numTrain = key.nextInt();
+		System.out.print("Enter num training cases (1-1498): ");
+		Scanner s = new Scanner(System.in);
+		int numTrain = s.nextInt();
 		int numTest = 1499 - numTrain;
-		key.close();
-		//rotate the training set inside of modified_census.train
-		//test everything that's not the training set, including those that were excluded
-		ArrayList<Integer> minIndices = new ArrayList<Integer>(); //contains starting indices of training sets
-		for (int i = 1; i <= 1001-numTrain; i+=numTrain) {
+		int index = numTrain - 1;
+		ArrayList<Integer> minIndices = new ArrayList<Integer>();
+		for (int i = 1; i <= 1499-numTrain; i+=numTrain) {
 			minIndices.add(i);
 		}
 		//add last index
-		if (1000%numTrain != 0) {
-			minIndices.add(1001-numTrain);
+		if (1499%numTrain != 0) {
+			minIndices.add(1499-numTrain);
 		}
-		
+		System.out.println(minIndices);
+		s.close();
+
 		double accuracy = 0;
-		for (int minIndex : minIndices) { //change location of training set
+		for (int minIndex : minIndices) {
+			int maxIndex = minIndex + numTrain; //max is exclusive
+			// read in census.train
+			Scanner f = new Scanner(new File("census.train"));
 			String trname = Integer.toString(numTrain) + "_train_part_" + Integer.toString(minIndex);
 			String tsname = Integer.toString(numTrain) + "_test_part_" + Integer.toString(minIndex);
 			String sname = Integer.toString(numTrain) + "_solution_part_" + Integer.toString(minIndex);
-			Scanner tset = new Scanner(new File("modified_census.train"));
 			PrintWriter training = new PrintWriter(trname);
 			PrintWriter testing = new PrintWriter(tsname);
 			PrintWriter solution = new PrintWriter(sname);
 			
-			int maxIndex = minIndex + numTrain;
-			System.out.println("Training set: [" + minIndex + "," + maxIndex + ")");
 			int lineNum = 1;
-			while (tset.hasNextLine()) {
-				String line = tset.nextLine();
-				if (lineNum >= minIndex && lineNum < maxIndex) {
+			while (f.hasNextLine()) {
+				String line = f.nextLine();
+				if (lineNum >= minIndex && lineNum < maxIndex) { //training set
 					training.println(line);
-				} else {
+				} else { // test
 					String[] split = line.split(" ");
 					String toWrite = "";
 					for (int i = 0; i < split.length-1; i++) {
 						toWrite += split[i];
+						if (i != split.length) {
+							toWrite += " ";
+						}
 					}
+					solution.println(split[split.length - 1]);
 					testing.println(toWrite);
-					solution.println(split[split.length-1]);
 				}
 				lineNum++;
 			}
-			tset.close();
+			f.close();
 			training.close();
-			Scanner excdat = new Scanner(new File("excluded_data"));
-			while (excdat.hasNextLine()) {
-				String[] line = excdat.nextLine().split(" ");
-				String toWrite = "";
-				for (int i = 0; i < line.length-1; i++) {
-					toWrite += line[i];
-					if (i != line.length - 1) {
-						toWrite += " ";
-					}
-				}
-				testing.println(toWrite);
-				solution.println(line[line.length-1]);
-			}
-			solution.close();
 			testing.close();
-			excdat.close();
+			solution.close();
 			
 			hello.train(trname);
 			hello.makePredictions(tsname);
 			
-			//compare output
+			// compare output
 			Scanner sol = new Scanner(new File(sname));
 			Scanner mysol = new Scanner(new File("mysol"));
 
@@ -94,14 +82,15 @@ public class TestCaseGenerator {
 			}
 			sol.close();
 			mysol.close();
-			
-			double propCorrect = (double) numCorr/(double) numTot;
-			accuracy += propCorrect;
+			double prop = (double) numCorr / (double) numTot;
+			accuracy += prop;
 			
 			System.out.println(numTrain + " training set, " + numTest + " test set");
 			System.out.println("test section " + minIndices.indexOf(minIndex));
-			System.out.println("Classifier accuracy: " + (propCorrect*100) + "%");
+			System.out.println("Classifier accuracy: " + (prop*100) + "%");
 		}
 		System.out.println("Average classifier accuracy: " + (accuracy/(double)minIndices.size())*100 + "%");
+
 	}
+
 }

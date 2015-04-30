@@ -160,7 +160,7 @@ public class V1 extends Classifier {
 	public void makePredictions(String testDataFilepath) {
 		try {
 			Scanner s = new Scanner(new File(testDataFilepath));
-			PrintWriter mysol = new PrintWriter("mysol");
+//			PrintWriter mysol = new PrintWriter("mysol");
 			while (s.hasNextLine()) {
 				//one case at a time
 				String[] split = s.nextLine().split(" ");
@@ -203,24 +203,24 @@ public class V1 extends Classifier {
 				//System.out.println("p1: " + p1 + ", p0: " + p0);
 				//print results
 				if (p1 > p0) {
-//					System.out.println(">50K");
-					mysol.println(">50K");
+					System.out.println(">50K");
+//					mysol.println(">50K");
 				} else if (p1 < p0) {
-//					System.out.println("<=50K");
-					mysol.println("<=50K");
+					System.out.println("<=50K");
+//					mysol.println("<=50K");
 				} else { //if equal probabilities, it's a toss-up
 					Random r = new Random();
 					int i = r.nextInt(2);
 					if (i == 0) {
-//						System.out.println(">50K");
-						mysol.println(">50K");
+						System.out.println(">50K");
+//						mysol.println(">50K");
 					} else {
-//						System.out.println("<=50K");
-						mysol.println("<=50K");
+						System.out.println("<=50K");
+//						mysol.println("<=50K");
 					}
 				}
 			}
-			mysol.close();
+//			mysol.close();
 			s.close();
 		} catch (FileNotFoundException e) {
 			System.err.print("Test file not found. Exiting.");
@@ -307,8 +307,8 @@ public class V1 extends Classifier {
 
 	public static void main(String[] args) throws Exception {
 		V1 hello = new V1("census.names");
-		hello.train("500_train_part_0");
-		hello.makePredictions("500_test_part_0");
+		hello.train("census.train");
+		hello.makePredictions("census.test");
 		
 	}
 

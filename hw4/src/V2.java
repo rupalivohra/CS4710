@@ -63,7 +63,8 @@ public class V2 extends Classifier {
 			}
 			while (s.hasNextLine()) {
 				String[] split = s.nextLine().split("\\s+");
-				if (!split[0].equals("education-num")) { //features to not count
+				if (!split[0].equals("education-num")) { // features to not
+															// count
 					features.add(split[0]);
 					String[] noTitle = Arrays.copyOfRange(split, 1, split.length);
 					if (!noTitle[0].equals("numeric")) {
@@ -73,7 +74,8 @@ public class V2 extends Classifier {
 			}
 			s.close();
 
-			for (int i = 0; i < features.size(); i++) { //does not contain educatoin-num
+			for (int i = 0; i < features.size(); i++) { // does not contain
+														// educatoin-num
 				if (featureOptions.containsKey(features.get(i))) { // discrete
 					for (int j = 0; j < featureOptions.get(features.get(i)).length; j++) {
 						frequencyMapGreater.put(featureOptions.get(features.get(i))[j], 0);
@@ -102,29 +104,38 @@ public class V2 extends Classifier {
 			while (s.hasNextLine()) {
 				String[] split = s.nextLine().split(" "); // contains all case
 															// data
-				String[] withoutElim = new String[split.length-1]; //do not use education-num in training
+				String[] withoutElim = new String[split.length - 1]; // do not
+																		// use
+																		// education-num
+																		// in
+																		// training
 				for (int i = 0; i < split.length; i++) {
-					if (i < 3) { //education-num is index 3
+					if (i < 3) { // education-num is index 3
 						withoutElim[i] = split[i];
 					}
 					if (i > 3) {
-						withoutElim[i-1] = split[i];
+						withoutElim[i - 1] = split[i];
 					}
 				}
-				if (withoutElim.length != features.size() + 1) { // missing at least
-															// one feature
+				if (withoutElim.length != features.size() + 1) { // missing at
+																	// least
+					// one feature
 					System.out.println(Arrays.toString(withoutElim));
 				}
 				for (int i = 0; i < features.size(); i++) {
 					if (featureOptions.containsKey(features.get(i))) { // discrete
 																		// var
-						if (withoutElim[withoutElim.length - 1].equals(">50K")) { // y = 1
+						if (withoutElim[withoutElim.length - 1].equals(">50K")) { // y
+																					// =
+																					// 1
 							frequencyMapGreater.replace(withoutElim[i], frequencyMapGreater.get(withoutElim[i]) + 1);
 						} else { // y = 0
 							frequencyMapLess.replace(withoutElim[i], frequencyMapLess.get(withoutElim[i]) + 1);
 						}
 					} else { // continuous var
-						if (withoutElim[withoutElim.length - 1].equals(">50K")) { // y = 1
+						if (withoutElim[withoutElim.length - 1].equals(">50K")) { // y
+																					// =
+																					// 1
 							valueMapGreater.get(features.get(i)).add(Integer.parseInt(withoutElim[i]));
 						} else {
 							valueMapLess.get(features.get(i)).add(Integer.parseInt(withoutElim[i]));
@@ -174,17 +185,17 @@ public class V2 extends Classifier {
 	public void makePredictions(String testDataFilepath) {
 		try {
 			Scanner s = new Scanner(new File(testDataFilepath));
-			PrintWriter mysol = new PrintWriter("mysol");
+			// PrintWriter mysol = new PrintWriter("mysol");
 			while (s.hasNextLine()) {
 				// one case at a time
 				String[] split = s.nextLine().split(" ");
-				String[] withoutElim = new String[split.length-1];
+				String[] withoutElim = new String[split.length - 1];
 				for (int i = 0; i < split.length; i++) {
-					if (i < 3) { //education-num is index 3
+					if (i < 3) { // education-num is index 3
 						withoutElim[i] = split[i];
 					}
 					if (i > 3) {
-						withoutElim[i-1] = split[i];
+						withoutElim[i - 1] = split[i];
 					}
 				}
 				if (withoutElim.length != features.size()) {
@@ -197,14 +208,18 @@ public class V2 extends Classifier {
 				for (int i = 0; i < withoutElim.length; i++) {
 					if (!withoutElim[i].equals("?")) {
 						// handle numeric
-						if (numericValsGreater.containsKey(withoutElim[i])) { // y = 1
+						if (numericValsGreater.containsKey(withoutElim[i])) { // y
+																				// =
+																				// 1
 							double sub = Double.parseDouble(withoutElim[i]) - numericValsGreater.get(withoutElim[i])[0];
 							double exp = -1 * Math.pow(sub, 2) / (2 * numericValsGreater.get(withoutElim[i])[1]);
 							double numerator = Math.pow(Math.E, exp);
 							double den = Math.sqrt(2 * Math.PI * numericValsGreater.get(withoutElim[i])[1]);
 							p1 = p1 * (numerator / den);
 						}
-						if (numericValsLess.containsKey(withoutElim[i])) { // y = 0
+						if (numericValsLess.containsKey(withoutElim[i])) { // y
+																			// =
+																			// 0
 							double sub = Double.parseDouble(withoutElim[i]) - numericValsLess.get(withoutElim[i])[0];
 							double exp = -1 * Math.pow(sub, 2) / (2 * numericValsLess.get(withoutElim[i])[1]);
 							double numerator = Math.pow(Math.E, exp);
@@ -212,10 +227,14 @@ public class V2 extends Classifier {
 							p1 = p1 * (numerator / den);
 						}
 						// handle discrete
-						if (featureProbGreater.containsKey(withoutElim[i])) { // y = 1
+						if (featureProbGreater.containsKey(withoutElim[i])) { // y
+																				// =
+																				// 1
 							p1 = p1 * featureProbGreater.get(withoutElim[i]);
 						}
-						if (featureProbLess.containsKey(withoutElim[i])) { // y = 0
+						if (featureProbLess.containsKey(withoutElim[i])) { // y
+																			// =
+																			// 0
 							p0 = p0 * featureProbLess.get(withoutElim[i]);
 						}
 					}
@@ -226,24 +245,24 @@ public class V2 extends Classifier {
 				// System.out.println("p1: " + p1 + ", p0: " + p0);
 				// print results
 				if (p1 > p0) {
-//					 System.out.println(">50K");
-					mysol.println(">50K");
+					System.out.println(">50K");
+					// mysol.println(">50K");
 				} else if (p1 < p0) {
-//					 System.out.println("<=50K");
-					mysol.println("<=50K");
+					System.out.println("<=50K");
+					// mysol.println("<=50K");
 				} else { // if equal probabilities, it's a toss-up
 					Random r = new Random();
 					int i = r.nextInt(2);
 					if (i == 0) {
-//						 System.out.println(">50K");
-						mysol.println(">50K");
+						System.out.println(">50K");
+						// mysol.println(">50K");
 					} else {
-//						 System.out.println("<=50K");
-						mysol.println("<=50K");
+						System.out.println("<=50K");
+						// mysol.println("<=50K");
 					}
 				}
 			}
-			mysol.close();
+			// mysol.close();
 			s.close();
 		} catch (FileNotFoundException e) {
 			System.err.print("Test file not found. Exiting.");
@@ -330,8 +349,8 @@ public class V2 extends Classifier {
 
 	public static void main(String[] args) throws Exception {
 		V1 hello = new V1("census.names");
-		hello.train("500_train_part_0");
-		hello.makePredictions("500_test_part_0");
+		hello.train("census.train");
+		hello.makePredictions("census.test");
 
 	}
 
