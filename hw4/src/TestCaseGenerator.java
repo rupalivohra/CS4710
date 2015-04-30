@@ -10,19 +10,19 @@ public class TestCaseGenerator {
 
 	public static void main(String[] args) throws FileNotFoundException {
 		V1 hello = new V1("census.names");
-		System.out.print("Enter num training cases (1-1498): ");
+		System.out.print("Enter num test cases (1-999): ");
 		Scanner s = new Scanner(System.in);
 		int numTrain = s.nextInt();
 		int numTest = 1499 - numTrain;
 		// always split into "thirds"
 		int index = numTrain - 1;
 		ArrayList<Integer> maxIndices = new ArrayList<Integer>();
-		while (index < 1500) {
+		while (index < 1001) {
 			maxIndices.add(index);
 			index += numTrain;
 		}
-		if (index - numTrain < 1499) {
-			maxIndices.add(1499); // accounts for uneven split
+		if (index - numTrain < 1000) {
+			maxIndices.add(1000); // accounts for uneven split
 		}
 		System.out.print("Select segment to be test cases: 0. [1-" + maxIndices.get(0) + "]");
 		for (int i = 1; i < maxIndices.size(); i++) {
@@ -42,10 +42,13 @@ public class TestCaseGenerator {
 			if (sectionTest > 0) {
 				minIndexTest = maxIndices.get(sectionTest - 1) + 1;
 			}
+			if (sectionTest == (maxIndices.size() - 1)) {
+				minIndexTest = maxIndices.get(sectionTest) - numTrain; //makes sure last section still has appropriate size
+			}
 			int maxIndexTest = maxIndices.get(sectionTest);
 
 			// read in census.train
-			Scanner f = new Scanner(new File("census.train"));
+			Scanner f = new Scanner(new File("modified_census.train"));
 			String trname = Integer.toString(numTrain) + "_train_part_" + Integer.toString(sectionTest);
 			String tsname = Integer.toString(numTrain) + "_test_part_" + Integer.toString(sectionTest);
 			String sname = Integer.toString(numTrain) + "_solution_part_" + Integer.toString(sectionTest);
@@ -78,6 +81,11 @@ public class TestCaseGenerator {
 				}
 				position++;
 			}
+			Scanner excdat = new Scanner(new File("excluded_data"));
+			while (excdat.hasNextLine()) {
+				String[] line = excdat.nextLine().split(" ");
+				solution.println(line[line.length-1]);
+			}
 			training.close();
 			testing.close();
 			solution.close();
@@ -102,6 +110,8 @@ public class TestCaseGenerator {
 					numTot++;
 				}
 			}
+			sol.close();
+			mysol.close();
 			double prop = (double) numCorr / (double) numTot;
 			accuracy += prop;
 			if (prop < min) {
@@ -110,7 +120,7 @@ public class TestCaseGenerator {
 			if (prop > max) {
 				max = prop;
 			}
-			System.out.println(numTrain + " training set, " + numTest + " test set");
+			System.out.println(numTrain + " test set, " + numTest + " training set");
 			System.out.println("Predicted " + prop * 100 + "% correct for " + sname);
 		}
 		System.out.println("Average correct prediction rate: " + (accuracy/(double)maxIndices.size())*100 + "%");

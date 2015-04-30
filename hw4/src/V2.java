@@ -1,3 +1,6 @@
+/*
+ * Like V1, but gets rid of redundant features
+ */
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
@@ -7,7 +10,7 @@ import java.util.HashMap;
 import java.util.Random;
 import java.util.Scanner;
 
-public class V1 extends Classifier {
+public class V2 extends Classifier {
 
 	// holds the first line in .names file
 	String[] classifications;
@@ -37,7 +40,7 @@ public class V1 extends Classifier {
 
 	double pGreater; // P(Y = 1); P(Y=0) = 1-pGreater
 
-	public V1(String namesFilepath) {
+	public V2(String namesFilepath) {
 		super(namesFilepath);
 
 		// read in file
@@ -60,15 +63,17 @@ public class V1 extends Classifier {
 			}
 			while (s.hasNextLine()) {
 				String[] split = s.nextLine().split("\\s+");
-				features.add(split[0]);
-				String[] noTitle = Arrays.copyOfRange(split, 1, split.length);
-				if (!noTitle[0].equals("numeric")) {
-					featureOptions.put(split[0], noTitle);
+				if (!split[0].equals("education-num")) { //features to not count
+					features.add(split[0]);
+					String[] noTitle = Arrays.copyOfRange(split, 1, split.length);
+					if (!noTitle[0].equals("numeric")) {
+						featureOptions.put(split[0], noTitle);
+					}
 				}
 			}
 			s.close();
 
-			for (int i = 0; i < features.size(); i++) {
+			for (int i = 0; i < features.size(); i++) { //does not contain educatoin-num
 				if (featureOptions.containsKey(features.get(i))) { // discrete
 					for (int j = 0; j < featureOptions.get(features.get(i)).length; j++) {
 						frequencyMapGreater.put(featureOptions.get(features.get(i))[j], 0);
@@ -97,27 +102,36 @@ public class V1 extends Classifier {
 			while (s.hasNextLine()) {
 				String[] split = s.nextLine().split(" "); // contains all case
 															// data
-				if (split.length != features.size() + 1) { // missing at least
+				String[] withoutElim = new String[split.length-1]; //do not use education-num in training
+				for (int i = 0; i < split.length; i++) {
+					if (i < 3) { //education-num is index 3
+						withoutElim[i] = split[i];
+					}
+					if (i > 3) {
+						withoutElim[i-1] = split[i];
+					}
+				}
+				if (withoutElim.length != features.size() + 1) { // missing at least
 															// one feature
-					System.out.println(Arrays.toString(split));
+					System.out.println(Arrays.toString(withoutElim));
 				}
 				for (int i = 0; i < features.size(); i++) {
 					if (featureOptions.containsKey(features.get(i))) { // discrete
 																		// var
-						if (split[split.length - 1].equals(">50K")) { // y = 1
-							frequencyMapGreater.replace(split[i], frequencyMapGreater.get(split[i]) + 1);
+						if (withoutElim[withoutElim.length - 1].equals(">50K")) { // y = 1
+							frequencyMapGreater.replace(withoutElim[i], frequencyMapGreater.get(withoutElim[i]) + 1);
 						} else { // y = 0
-							frequencyMapLess.replace(split[i], frequencyMapLess.get(split[i]) + 1);
+							frequencyMapLess.replace(withoutElim[i], frequencyMapLess.get(withoutElim[i]) + 1);
 						}
 					} else { // continuous var
-						if (split[split.length - 1].equals(">50K")) { // y = 1
-							valueMapGreater.get(features.get(i)).add(Integer.parseInt(split[i]));
+						if (withoutElim[withoutElim.length - 1].equals(">50K")) { // y = 1
+							valueMapGreater.get(features.get(i)).add(Integer.parseInt(withoutElim[i]));
 						} else {
-							valueMapLess.get(features.get(i)).add(Integer.parseInt(split[i]));
+							valueMapLess.get(features.get(i)).add(Integer.parseInt(withoutElim[i]));
 						}
 					}
 				}
-				if (split[split.length - 1].equals(">50K")) {
+				if (withoutElim[withoutElim.length - 1].equals(">50K")) {
 					++numGreater;
 				} else {
 					++numLessThan;
@@ -162,60 +176,69 @@ public class V1 extends Classifier {
 			Scanner s = new Scanner(new File(testDataFilepath));
 			PrintWriter mysol = new PrintWriter("mysol");
 			while (s.hasNextLine()) {
-				//one case at a time
+				// one case at a time
 				String[] split = s.nextLine().split(" ");
-//				if (split.length != features.size()) {
-//					// missing at least one feature
-//					split = fillInMissingVals(split);
-//				}
-				//if ? in array, the value was missing
-				double p1 = 1; //P(Y = 1)
-				double p0 = 1; //P(Y = 0)
+				String[] withoutElim = new String[split.length-1];
 				for (int i = 0; i < split.length; i++) {
-					if (!split[i].equals("?")) {
-						//handle numeric
-						if (numericValsGreater.containsKey(split[i])) { // y = 1
-							double sub = Double.parseDouble(split[i]) - numericValsGreater.get(split[i])[0];
-							double exp = -1*Math.pow(sub,2)/(2*numericValsGreater.get(split[i])[1]);
+					if (i < 3) { //education-num is index 3
+						withoutElim[i] = split[i];
+					}
+					if (i > 3) {
+						withoutElim[i-1] = split[i];
+					}
+				}
+				if (withoutElim.length != features.size()) {
+					// missing at least one feature
+					withoutElim = fillInMissingVals(withoutElim);
+				}
+				// if ? in array, the value was missing
+				double p1 = 1; // P(Y = 1)
+				double p0 = 1; // P(Y = 0)
+				for (int i = 0; i < withoutElim.length; i++) {
+					if (!withoutElim[i].equals("?")) {
+						// handle numeric
+						if (numericValsGreater.containsKey(withoutElim[i])) { // y = 1
+							double sub = Double.parseDouble(withoutElim[i]) - numericValsGreater.get(withoutElim[i])[0];
+							double exp = -1 * Math.pow(sub, 2) / (2 * numericValsGreater.get(withoutElim[i])[1]);
 							double numerator = Math.pow(Math.E, exp);
-							double den = Math.sqrt(2*Math.PI*numericValsGreater.get(split[i])[1]);
-							p1 = p1*(numerator/den);
+							double den = Math.sqrt(2 * Math.PI * numericValsGreater.get(withoutElim[i])[1]);
+							p1 = p1 * (numerator / den);
 						}
-						if (numericValsLess.containsKey(split[i])) { // y = 0
-							double sub = Double.parseDouble(split[i]) - numericValsLess.get(split[i])[0];
-							double exp = -1*Math.pow(sub,2)/(2*numericValsLess.get(split[i])[1]);
+						if (numericValsLess.containsKey(withoutElim[i])) { // y = 0
+							double sub = Double.parseDouble(withoutElim[i]) - numericValsLess.get(withoutElim[i])[0];
+							double exp = -1 * Math.pow(sub, 2) / (2 * numericValsLess.get(withoutElim[i])[1]);
 							double numerator = Math.pow(Math.E, exp);
-							double den = Math.sqrt(2*Math.PI*numericValsLess.get(split[i])[1]);
-							p1 = p1*(numerator/den);
+							double den = Math.sqrt(2 * Math.PI * numericValsLess.get(withoutElim[i])[1]);
+							p1 = p1 * (numerator / den);
 						}
-						//handle discrete
-						if (featureProbGreater.containsKey(split[i])) { // y = 1
-							p1 = p1*featureProbGreater.get(split[i]);
+						// handle discrete
+						if (featureProbGreater.containsKey(withoutElim[i])) { // y = 1
+							p1 = p1 * featureProbGreater.get(withoutElim[i]);
 						}
-						if (featureProbLess.containsKey(split[i])) { // y = 0
-							p0 = p0*featureProbLess.get(split[i]);
+						if (featureProbLess.containsKey(withoutElim[i])) { // y = 0
+							p0 = p0 * featureProbLess.get(withoutElim[i]);
 						}
 					}
 				}
-				p1 = p1*pGreater;
-				p0 = p0*(1-pGreater);
-				
-				//System.out.println("p1: " + p1 + ", p0: " + p0);
-				//print results
+				p1 = p1 * pGreater;
+				p0 = p0 * (1 - pGreater);
+
+				// System.out.println("p1: " + p1 + ", p0: " + p0);
+				// print results
 				if (p1 > p0) {
-//					System.out.println(">50K");
+//					 System.out.println(">50K");
 					mysol.println(">50K");
 				} else if (p1 < p0) {
-//					System.out.println("<=50K");
+//					 System.out.println("<=50K");
 					mysol.println("<=50K");
-				} else { //if equal probabilities, it's a toss-up
+				} else { // if equal probabilities, it's a toss-up
 					Random r = new Random();
 					int i = r.nextInt(2);
 					if (i == 0) {
-//						System.out.println(">50K");
+//						 System.out.println(">50K");
 						mysol.println(">50K");
 					} else {
-//						System.out.println("<=50K");
+//						 System.out.println("<=50K");
 						mysol.println("<=50K");
 					}
 				}
@@ -309,7 +332,7 @@ public class V1 extends Classifier {
 		V1 hello = new V1("census.names");
 		hello.train("500_train_part_0");
 		hello.makePredictions("500_test_part_0");
-		
+
 	}
 
 }
